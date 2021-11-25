@@ -1,11 +1,14 @@
 package com.projet.parser.combinators;
 
+import java.util.Collections;
 import java.util.Optional;
 
 public class State<S extends CharSequence> {
-    final private S source;
+    private static final char NEWLINE = '\n';
+
+    private final S source;
+    private final int len;
     private int pos = 0;
-    private int len;
     private Object result;
 
     public State(S src) {
@@ -33,11 +36,18 @@ public class State<S extends CharSequence> {
         pos = checkpoint;
     }
 
+    public Object getResult() {
+        return result;
+    }
+
     public void setResult(Object res) {
         result = res;
     }
 
-    public Object getResult() {
-        return result;
+    public Location getLocation() {
+        CharSequence before = source.subSequence(0, pos - 1);
+        long line = before.chars().filter(c -> c == NEWLINE).count() + 1;
+        long col = pos - before.chars().boxed().sorted(Collections.reverseOrder()).takeWhile(c -> c != NEWLINE).count();
+        return new Location(line, col);
     }
 }

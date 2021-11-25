@@ -11,9 +11,10 @@ public abstract class Combinator<O> implements Function<State<? extends CharSequ
 
     @SuppressWarnings("unchecked")
     public final O parse(State<? extends CharSequence> state) throws ParseException {
-        if(this.apply(state))
-        return (O) state.getResult();
+        if (this.apply(state))
+            return (O) state.getResult();
 
-        throw new ParseException();
+        Location l = state.getLocation();
+        throw new ParseException(l.line, l.column);
     }
 }
