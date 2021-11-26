@@ -17,6 +17,7 @@ public class CombinatorsTest {
     void testSatisfy() {
         final char testCase = 'a';
         final State<?> state = new State<>(testCase + "");
+
         assertTrue(satisfy(c -> c == testCase).apply(state));
         assertEquals(state.getResult(), testCase);
     }
@@ -27,6 +28,7 @@ public class CombinatorsTest {
         IntStream digitRange = IntStream.rangeClosed(0, 0xF);
         for (char digit : digitRange.mapToObj(i -> Character.forDigit(i, 16)).collect(Collectors.toList())) {
             final State<?> state = new State<>(digit + "");
+
             assertTrue(hexDigit().apply(state));
             assertEquals(state.getResult(), digit);
         }
@@ -38,6 +40,7 @@ public class CombinatorsTest {
         IntStream byteRange = IntStream.rangeClosed(0, 0xFF);
         for (String byteString : byteRange.mapToObj(i -> String.format("%02x", i)).collect(Collectors.toList())) {
             final State<?> state = new State<>(byteString);
+
             assertTrue(hexByte().apply(state));
             assertEquals(state.getResult(), (byte) Integer.parseInt(byteString, 16));
         }
@@ -50,6 +53,7 @@ public class CombinatorsTest {
         for (Iterator<String> it = intRange.mapToObj(i -> String.format("%02x", i)).iterator(); it.hasNext(); ) {
             String offsetString = it.next();
             final State<?> state = new State<>(offsetString);
+
             assertTrue(hexOffset().apply(state));
             assertEquals(state.getResult(), Integer.parseInt(offsetString, 16));
         }

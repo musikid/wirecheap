@@ -28,20 +28,7 @@ public abstract class Combinators {
     }
 
     public static <O> Combinator<List<O>> count(int min, Combinator<O> combinator) {
-        return new Combinator<>() {
-            @Override
-            public Boolean apply(State<? extends CharSequence> state) {
-                List<O> l = new ArrayList<>();
-                while (combinator.apply(state))
-                    l.add(combinator.getResult(state));
-
-                if (l.size() < min)
-                    return false;
-
-                state.setResult(l);
-                return true;
-            }
-        };
+        return count(min, Integer.MAX_VALUE, combinator);
     }
 
     public static <O> Combinator<List<O>> count(int min, int max, Combinator<O> combinator) {
@@ -102,4 +89,97 @@ public abstract class Combinators {
             }
         };
     }
+
+    public static Combinator<Character> space() {
+        return satisfy(c -> c == ' ');
+    }
+
+    public static Combinator<?> spaces() {
+        return new Combinator<>() {
+            @Override
+            public Boolean apply(State<? extends CharSequence> state) {
+                count(0, space()).apply(state);
+
+                return true;
+            }
+        };
+    }
+
+    public static Combinator<?> skipUntil(Combinator<?> skip) {
+        return new Combinator<>() {
+            @Override
+            public Boolean apply(State<? extends CharSequence> state) {
+                while (!skip.apply(state))
+                    ;
+
+                return true;
+            }
+        };
+    }
+
+    public static Combinator<?> eof() {
+        return new Combinator<>() {
+            @Override
+            public Boolean apply(State<? extends CharSequence> state) {
+                return state.isEof();
+            }
+        };
+    }
+
+    public static Combinator<?> choice(Combinator<?>... combinators) {
+        return new Combinator<>() {
+            @Override
+            public Boolean apply(State<? extends CharSequence> state) {
+                for (Combinator<?> combinator : combinators) {
+                    if (combinator.apply(state)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        };
+    }
+
+    public static Combinator<?> newline() {
+        return satisfy(c -> c == '\n');
+    }
+
+    public static <O> Combinator<O> lookAhead(Combinator<O> cb) {
+        return new Combinator<>() {
+            @Override
+            public Boolean apply(State<? extends CharSequence> state) {
+                Checkpoint c = state.checkpoint();
+                if (cb.apply(state)) {
+                    state.restore(c);
+                    return true;
+                }
+
+                return false;
+            }
+        };
+    }
+
+    public static <O> Combinator<O> notFollowedBy(Combinator<O> c) {
+        return new Combinator<>() {
+            @Override
+            public Boolean apply(State<? extends CharSequence> state) {
+                return !c.apply(state);
+            }
+        };
+    }
+
+    public static <O> Combinator<Optional<O>> optional(Combinator<O> cb) {
+        return new Combinator<>() {
+            @Override
+            public Boolean apply(State<? extends CharSequence> state) {
+                Checkpoint c = state.checkpoint();
+                if (!cb.apply(state))
+                    state.restore(c);
+
+                return true;
+            }
+        };
+    }
+
 }
