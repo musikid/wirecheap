@@ -16,24 +16,24 @@ public class State<S extends CharSequence> {
         len = source.length();
     }
 
-    public int checkpoint() {
-        return pos;
+    public Checkpoint checkpoint() {
+        return new Checkpoint(pos);
     }
 
     public boolean isEof() {
-        return next().isEmpty();
+        return pos == len;
     }
 
     public Optional<Character> next() {
         return (pos < len) ? Optional.of(source.charAt(pos++)) : Optional.empty();
     }
 
-    public void restore(int checkpoint) throws StringIndexOutOfBoundsException {
+    public void restore(Checkpoint c) throws StringIndexOutOfBoundsException {
         // TODO: Add bound checks
-        if (checkpoint < 0 || checkpoint >= len) {
-            throw new StringIndexOutOfBoundsException(checkpoint);
+        if (c.pos < 0 || c.pos >= len) {
+            throw new StringIndexOutOfBoundsException(c.pos);
         }
-        pos = checkpoint;
+        pos = c.pos;
     }
 
     public Object getResult() {
