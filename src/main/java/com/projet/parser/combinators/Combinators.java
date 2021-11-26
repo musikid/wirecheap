@@ -14,7 +14,7 @@ public abstract class Combinators {
                 Optional<Character> c = state.next();
                 boolean r = c.map(f::test).orElse(false);
                 if (r)
-                    state.setResult(c);
+                    state.setResult(c.get());
 
                 return r;
             }
@@ -27,14 +27,13 @@ public abstract class Combinators {
                 || c >= 'a' && c <= 'f');
     }
 
-    @SuppressWarnings("unchecked")
     public static <O> Combinator<List<O>> count(int min, Combinator<O> combinator) {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
                 List<O> l = new ArrayList<>();
                 while (combinator.apply(state))
-                    l.add((O) state.getResult());
+                    l.add(combinator.getResult(state));
 
                 if (l.size() < min)
                     return false;
@@ -53,8 +52,7 @@ public abstract class Combinators {
                 int i = 0;
                 while (combinator.apply(state) && i < max) {
                     i++;
-                    @SuppressWarnings("unchecked")
-                    O result = (O) state.getResult();
+                    O result = combinator.getResult(state);
                     l.add(result);
                 }
 
@@ -67,20 +65,39 @@ public abstract class Combinators {
         };
     }
 
-    public static Combinator<Byte> hexByte() {
+    public static Combinator<Integer> hexOffset() {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
-                if (!count(2, 2, hexDigit()).apply(state))
+                Combinator<List<Character>> c = count(2, hexDigit());
+                if (!c.apply(state))
                     return false;
 
-                @SuppressWarnings("unchecked")
-                String byteString = ((List<Character>) state.getResult())
+                String offsetString = c.getResult(state)
                         .stream()
                         .map(String::valueOf)
                         .collect(Collectors.joining());
 
-                state.setResult(Byte.parseByte(byteString, 16));
+                state.setResult(Integer.parseInt(offsetString, 16));
+                return true;
+            }
+        };
+    }
+
+    public static Combinator<Byte> hexByte() {
+        return new Combinator<>() {
+            @Override
+            public Boolean apply(State<? extends CharSequence> state) {
+                Combinator<List<Character>> c = count(2, 2, hexDigit());
+                if (!c.apply(state))
+                    return false;
+
+                String byteString = c.getResult(state)
+                        .stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining());
+
+                state.setResult((byte) Integer.parseInt(byteString, 16));
                 return true;
             }
         };
