@@ -1,17 +1,17 @@
 package com.projet.parser;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class Fragment {
     private final int offset;
-    private final ArrayList<Byte> buffer;
+    private final List<Byte> buffer;
 
-    public Fragment(int off, ArrayList<Byte> buf) {
+    public Fragment(int off, List<Byte> buf) {
         offset = off;
         buffer = buf;
     }
 
-    public static ArrayList<Byte> mergeFragments(ArrayList<Fragment> fragments) {
+    public static List<Byte> mergeFragments(List<Fragment> fragments) {
         return null;
     }
 }
