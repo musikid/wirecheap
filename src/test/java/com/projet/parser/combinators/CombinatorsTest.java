@@ -6,21 +6,39 @@ import org.junit.jupiter.api.Test;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.projet.parser.combinators.Combinators.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class CombinatorsTest {
     @Test
     @DisplayName("satisfy combinator")
     void testSatisfy() {
-        final String testCase = "a";
-        assert (Combinators.satisfy(c -> c == 'a').apply(new State<>(testCase)));
+        final char testCase = 'a';
+        final State<?> state = new State<>(testCase + "");
+        assertTrue(satisfy(c -> c == testCase).apply(state));
+        assertEquals(state.getResult(), testCase);
     }
 
     @Test
     @DisplayName("hexDigit combinator")
     void testHexDigit() {
-        IntStream letters = IntStream.concat(IntStream.range('a', 'f' + 1), IntStream.range('a', 'F' + 1));
-        IntStream digits = IntStream.range('0', '9' + 1);
-        for (char digit : digits.mapToObj(c -> (char) c).collect(Collectors.toList())) {
-            assert (Combinators.hexDigit().apply(new State<>(digit + "")));
+        IntStream digitRange = IntStream.range(0, 0x10);
+        for (char digit : digitRange.mapToObj(c -> Character.forDigit(c, 16)).collect(Collectors.toList())) {
+            final State<?> state = new State<>(digit + "");
+            assertTrue(hexDigit().apply(state));
+            assertEquals(state.getResult(), digit);
+        }
+    }
+
+    @Test
+    @DisplayName("hexByte combinator")
+    void testHexByte() {
+        IntStream byteRange = IntStream.range(0, 0x100);
+        for (String byteString : byteRange.mapToObj(c -> String.format("%02x", c)).collect(Collectors.toList())) {
+            final State<?> state = new State<>(byteString);
+            assertTrue(hexByte().apply(state));
+            assertEquals(state.getResult(), (byte) Integer.parseInt(byteString, 16));
         }
     }
 }
