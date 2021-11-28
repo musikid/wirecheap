@@ -21,12 +21,18 @@ public abstract class Combinators {
         };
     }
 
+    /**
+     * Parses an hexadecimal digit.
+     *
+     * @return Combinator<Character>
+     */
     public static Combinator<Character> hexDigit() {
         return satisfy(c -> Character.isDigit(c)
                 || c >= 'A' && c <= 'F'
                 || c >= 'a' && c <= 'f');
     }
 
+    // TODO: Use a loop instead
     public static <O> Combinator<List<O>> count(int min, Combinator<O> combinator) {
         return count(min, Integer.MAX_VALUE, combinator);
     }
@@ -52,6 +58,13 @@ public abstract class Combinators {
         };
     }
 
+    /**
+     * Parses an offset (an <i>Integer</i>) from a string of hexadecimal digits (with length > 2),
+     * for example "0000".
+     *
+     * @return Combinator<Integer>
+     * @see Combinators#hexDigit()
+     */
     public static Combinator<Integer> hexOffset() {
         return new Combinator<>() {
             @Override
@@ -71,6 +84,12 @@ public abstract class Combinators {
         };
     }
 
+    /**
+     * Parses a byte from a string of format "FF".
+     *
+     * @return Combinator<Byte>
+     * @see Combinators#hexDigit()
+     */
     public static Combinator<Byte> hexByte() {
         return new Combinator<>() {
             @Override
