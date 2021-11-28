@@ -117,7 +117,7 @@ public abstract class Combinators {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
-                count(0, space()).apply(state);
+                many(space()).apply(state);
 
                 return true;
             }
@@ -131,6 +131,33 @@ public abstract class Combinators {
                 while (!skip.apply(state))
                     ;
 
+                return true;
+            }
+        };
+    }
+
+    public static <O> Combinator<List<O>> many(Combinator<O> cb) {
+        return count(0, cb);
+    }
+
+    public static <O> Combinator<List<O>> many1(Combinator<O> cb) {
+        return count(1, cb);
+    }
+
+    public static <O> Combinator<List<O>> manyTill(Combinator<O> cb, Combinator<?> delim) {
+        return new Combinator<>() {
+            @Override
+            public Boolean apply(State<? extends CharSequence> state) {
+                List<O> l = new ArrayList<>();
+
+                while (cb.apply(state))
+                    l.add(cb.getResult(state));
+
+                if (!delim.apply(state)) {
+                    return false;
+                }
+
+                state.setResult(l);
                 return true;
             }
         };
