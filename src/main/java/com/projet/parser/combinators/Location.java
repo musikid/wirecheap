@@ -1,8 +1,8 @@
 package com.projet.parser.combinators;
 
 public class Location {
-    public long line;
-    public long column;
+    public final long line;
+    public final long column;
 
     public Location(long l, long c) {
         line = l;
