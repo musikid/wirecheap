@@ -30,7 +30,7 @@ public class State<S extends CharSequence> {
 
     public void restore(Checkpoint c) throws StringIndexOutOfBoundsException {
         // TODO: Add bound checks
-        if (c.pos < 0 || c.pos >= len) {
+        if (c.pos < 0 || c.pos > len) {
             throw new StringIndexOutOfBoundsException(c.pos);
         }
         pos = c.pos;
@@ -45,9 +45,14 @@ public class State<S extends CharSequence> {
     }
 
     public Location getLocation() {
+        if (len == 0) {
+            return new Location(1, 0);
+        }
+
         CharSequence before = source.subSequence(0, pos - 1);
         long line = before.chars().filter(c -> c == NEWLINE).count() + 1;
         long col = pos - before.chars().boxed().sorted(Collections.reverseOrder()).takeWhile(c -> c != NEWLINE).count();
         return new Location(line, col);
+
     }
 }
