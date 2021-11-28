@@ -19,14 +19,20 @@ public class Parser implements Runnable {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
-                if (!notFollowedBy(hexOffset()).apply(state))
+                Object result = state.getResult();
+                if (hexOffset().apply(state))
                     return false;
-                return !skipUntil(newline()).skip(newline()).apply(state);
+                if (!skipTo(newline()).apply(state))
+                    return false;
+
+                state.setResult(result);
+
+                return true;
             }
         };
     }
 
-    private static Combinator<Fragment> fragment() {
+    static Combinator<Fragment> fragment() {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
@@ -39,16 +45,17 @@ public class Parser implements Runnable {
                 spaces().apply(state);
 
                 // Parse the bytes
-                Combinator<List<Byte>> parser = count(1, hexByte().skip(space()));
-                if (!parser.apply(state))
+                Combinator<List<Byte>> bytesParser = many1(hexByte().skip(space()));
+                if (!bytesParser.apply(state))
                     return false;
 
-                List<Byte> bytes = parser.getResult(state);
+                List<Byte> bytes = bytesParser.getResult(state);
 
-                space().apply(state);
+                if (!space().apply(state))
+                    return false;
 
                 // We skip everything until newline
-                skipUntil(newline()).apply(state);
+                skipTo(newline()).apply(state);
 
                 Fragment fragment = new Fragment(offset, bytes);
                 state.setResult(fragment);

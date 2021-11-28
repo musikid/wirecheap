@@ -43,11 +43,16 @@ public abstract class Combinators {
             public Boolean apply(State<? extends CharSequence> state) {
                 List<O> l = new ArrayList<>();
                 int i = 0;
+                Checkpoint c = state.checkpoint();
+
                 while (combinator.apply(state) && i < max) {
+                    c = state.checkpoint();
                     i++;
                     O result = combinator.getResult(state);
                     l.add(result);
                 }
+
+                state.restore(c);
 
                 if (l.size() < min)
                     return false;
@@ -124,14 +129,14 @@ public abstract class Combinators {
         };
     }
 
-    public static Combinator<?> skipUntil(Combinator<?> skip) {
+    public static Combinator<?> skipTo(Combinator<?> skip) {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
-                while (!skip.apply(state))
+                while (!skip.apply(state) && !eof().apply(state))
                     ;
 
-                return true;
+                return !eof().apply(state);
             }
         };
     }
@@ -172,60 +177,8 @@ public abstract class Combinators {
         };
     }
 
-    public static Combinator<?> choice(Combinator<?>... combinators) {
-        return new Combinator<>() {
-            @Override
-            public Boolean apply(State<? extends CharSequence> state) {
-                for (Combinator<?> combinator : combinators) {
-                    if (combinator.apply(state)) {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-        };
-    }
-
     public static Combinator<?> newline() {
         return satisfy(c -> c == '\n');
-    }
-
-    public static <O> Combinator<O> lookAhead(Combinator<O> cb) {
-        return new Combinator<>() {
-            @Override
-            public Boolean apply(State<? extends CharSequence> state) {
-                Checkpoint c = state.checkpoint();
-                if (cb.apply(state)) {
-                    state.restore(c);
-                    return true;
-                }
-
-                return false;
-            }
-        };
-    }
-
-    public static <O> Combinator<O> notFollowedBy(Combinator<O> c) {
-        return new Combinator<>() {
-            @Override
-            public Boolean apply(State<? extends CharSequence> state) {
-                return !c.apply(state);
-            }
-        };
-    }
-
-    public static <O> Combinator<Optional<O>> optional(Combinator<O> cb) {
-        return new Combinator<>() {
-            @Override
-            public Boolean apply(State<? extends CharSequence> state) {
-                Checkpoint c = state.checkpoint();
-                if (!cb.apply(state))
-                    state.restore(c);
-
-                return true;
-            }
-        };
     }
 
 }
