@@ -17,6 +17,9 @@ cache:
   stage: test
   script:
     - mvn $MAVEN_CLI_OPTS verify
+  artifacts:
+    paths:
+      - target/site/jacoco/jacoco.xml
 
 test:jdk17:
   <<: *test
