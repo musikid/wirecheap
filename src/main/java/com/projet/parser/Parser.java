@@ -5,11 +5,14 @@ import com.projet.parser.combinators.ParseException;
 import com.projet.parser.combinators.State;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.projet.parser.combinators.Combinators.*;
 
 public class Parser {
     private int dataLength = 0;
+    private int frameId = 0;
 
     public Parser() {
 
@@ -65,7 +68,7 @@ public class Parser {
         };
     }
 
-    Combinator<Fragment> line() {
+    Combinator<StatefulFragment> statefulFragment() {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
@@ -76,11 +79,14 @@ public class Parser {
 
                 if (f.offset == 0) {
                     dataLength = f.buffer.size();
+                    frameId++;
+                    state.setResult(new StatefulFragment(f, frameId));
                     return true;
                 }
 
                 if (dataLength == f.offset) {
                     dataLength += f.buffer.size();
+                    state.setResult(new StatefulFragment(f, frameId));
                     return true;
                 }
 
@@ -89,12 +95,24 @@ public class Parser {
         };
     }
 
-    Combinator<List<Fragment>> fragments() {
-        return manyTill(line().skip(many(commentLine())), eof());
+    Combinator<List<StatefulFragment>> fragments() {
+        return manyTill(statefulFragment().skip(many(commentLine())), eof());
     }
 
-    public List<Fragment> parse(String buffer) throws ParseException {
+    // TODO: Java streams are slow compared to loops
+    public List<Frame> parse(String buffer) throws ParseException {
         dataLength = 0;
-        return fragments().parse(buffer);
+        frameId = 0;
+
+        List<StatefulFragment> fragments = fragments().parse(buffer);
+        Map<Integer, List<StatefulFragment>> map = fragments.stream().collect(Collectors.groupingBy(f -> f.id));
+        return map.entrySet().stream()
+                .map(e -> {
+                            int id = e.getKey();
+                            List<Byte> mergedBuffer = e.getValue().stream().flatMap(f -> f.buffer.stream()).collect(Collectors.toList());
+                            return new Frame(id, mergedBuffer);
+                        }
+                )
+                .collect(Collectors.toList());
     }
 }
