@@ -1,9 +1,6 @@
 package com.lu3in033.projet.parser;
 
-import com.lu3in033.projet.parser.combinators.Combinator;
-import com.lu3in033.projet.parser.combinators.Combinators;
-import com.lu3in033.projet.parser.combinators.ParseException;
-import com.lu3in033.projet.parser.combinators.State;
+import com.lu3in033.projet.parser.combinators.*;
 
 import java.util.List;
 import java.util.Map;
@@ -71,8 +68,11 @@ public class Parser {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
-                if (!fragment().apply(state))
+                Checkpoint c = state.checkpoint();
+
+                if (!fragment().apply(state)) {
                     return false;
+                }
 
                 Fragment f = fragment().getResult(state);
 
@@ -89,6 +89,7 @@ public class Parser {
                     return true;
                 }
 
+                state.restore(c);
                 return false;
             }
         };
