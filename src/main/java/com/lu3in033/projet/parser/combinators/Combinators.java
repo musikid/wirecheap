@@ -1,4 +1,4 @@
-package com.projet.parser.combinators;
+package com.lu3in033.projet.parser.combinators;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -118,7 +118,7 @@ public abstract class Combinators {
         return satisfy(c -> c == ' ');
     }
 
-    public static Combinator<Void> spaces() {
+    public static Combinator<List<Character>> spaces() {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {

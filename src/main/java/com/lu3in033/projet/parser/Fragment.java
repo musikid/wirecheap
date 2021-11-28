@@ -1,4 +1,4 @@
-package com.projet.parser;
+package com.lu3in033.projet.parser;
 
 import java.util.List;
 import java.util.Objects;

@@ -1,10 +1,10 @@
-package com.projet.parser.combinators;
+package com.lu3in033.projet.parser.combinators;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static com.projet.parser.combinators.Combinators.satisfy;
-import static com.projet.parser.combinators.Combinators.space;
+import static com.lu3in033.projet.parser.combinators.Combinators.satisfy;
+import static com.lu3in033.projet.parser.combinators.Combinators.space;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

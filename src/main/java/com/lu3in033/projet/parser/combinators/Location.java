@@ -1,4 +1,4 @@
-package com.projet.parser.combinators;
+package com.lu3in033.projet.parser.combinators;
 
 public class Location {
     public final long line;

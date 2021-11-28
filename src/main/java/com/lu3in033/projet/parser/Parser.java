@@ -1,14 +1,13 @@
-package com.projet.parser;
+package com.lu3in033.projet.parser;
 
-import com.projet.parser.combinators.Combinator;
-import com.projet.parser.combinators.ParseException;
-import com.projet.parser.combinators.State;
+import com.lu3in033.projet.parser.combinators.Combinator;
+import com.lu3in033.projet.parser.combinators.Combinators;
+import com.lu3in033.projet.parser.combinators.ParseException;
+import com.lu3in033.projet.parser.combinators.State;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static com.projet.parser.combinators.Combinators.*;
 
 public class Parser {
     private int dataLength = 0;
@@ -23,9 +22,9 @@ public class Parser {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
                 Object result = state.getResult();
-                if (hexOffset().apply(state))
+                if (Combinators.hexOffset().apply(state))
                     return false;
-                if (!skipTo(newline()).apply(state))
+                if (!Combinators.skipTo(Combinators.newline()).apply(state))
                     return false;
 
                 state.setResult(result);
@@ -39,26 +38,26 @@ public class Parser {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
-                if (!hexOffset().apply(state))
+                if (!Combinators.hexOffset().apply(state))
                     return false;
 
-                int offset = hexOffset().getResult(state);
+                int offset = Combinators.hexOffset().getResult(state);
 
                 // We skip spaces
-                spaces().apply(state);
+                Combinators.spaces().apply(state);
 
                 // Parse the bytes
-                Combinator<List<Byte>> bytesParser = many1(hexByte().skip(space()));
+                Combinator<List<Byte>> bytesParser = Combinators.many1(Combinators.hexByte().skip(Combinators.space()));
                 if (!bytesParser.apply(state))
                     return false;
 
                 List<Byte> bytes = bytesParser.getResult(state);
 
-                if (!space().apply(state))
+                if (!Combinators.space().apply(state))
                     return false;
 
                 // We skip everything until newline
-                skipTo(newline()).apply(state);
+                Combinators.skipTo(Combinators.newline()).apply(state);
 
                 Fragment fragment = new Fragment(offset, bytes);
                 state.setResult(fragment);
@@ -96,7 +95,7 @@ public class Parser {
     }
 
     Combinator<List<StatefulFragment>> fragments() {
-        return manyTill(statefulFragment().skip(many(commentLine())), eof());
+        return Combinators.manyTill(statefulFragment().skip(Combinators.many(commentLine())), Combinators.eof());
     }
 
     // TODO: Java streams are slow compared to loops

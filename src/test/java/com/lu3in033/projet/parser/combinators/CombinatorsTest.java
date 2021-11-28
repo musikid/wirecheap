@@ -1,4 +1,4 @@
-package com.projet.parser.combinators;
+package com.lu3in033.projet.parser.combinators;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.projet.parser.combinators.Combinators.*;
+import static com.lu3in033.projet.parser.combinators.Combinators.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
