@@ -118,7 +118,7 @@ public abstract class Combinators {
         return satisfy(c -> c == ' ');
     }
 
-    public static Combinator<?> spaces() {
+    public static Combinator<Void> spaces() {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
@@ -129,7 +129,7 @@ public abstract class Combinators {
         };
     }
 
-    public static Combinator<?> skipTo(Combinator<?> skip) {
+    public static Combinator<Void> skipTo(Combinator<?> skip) {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
@@ -168,7 +168,7 @@ public abstract class Combinators {
         };
     }
 
-    public static Combinator<?> eof() {
+    public static Combinator<Void> eof() {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
@@ -177,7 +177,7 @@ public abstract class Combinators {
         };
     }
 
-    public static Combinator<?> newline() {
+    public static Combinator<Character> newline() {
         return satisfy(c -> c == '\n');
     }
 
