@@ -41,8 +41,7 @@ public class CombinatorsTest {
     void testHexByte() throws ParseException {
         IntStream byteRange = IntStream.rangeClosed(0, 0xFF);
         for (String byteString : byteRange.mapToObj(i -> String.format("%02x", i)).collect(Collectors.toList())) {
-            assertEquals((byte) Integer.parseInt(byteString, 16),
-                    hexByte().parse(byteString));
+            assertEquals((byte) Integer.parseInt(byteString, 16), hexByte().parse(byteString));
         }
     }
 
@@ -87,8 +86,7 @@ public class CombinatorsTest {
         assertEquals(testStr.length(), state.checkpoint().pos);
 
         state = new State<>("sts");
-        assertEquals(0,
-                count(0, testStr.length(), satisfy(c -> c == 'a')).parse(state).size());
+        assertEquals(0, count(0, testStr.length(), satisfy(c -> c == 'a')).parse(state).size());
         assertThrows(ParseException.class, () -> count(2, satisfy(c -> c == 's')).parse(""));
     }
 }

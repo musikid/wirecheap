@@ -7,5 +7,4 @@ public class NextHeaderProtocol {
         this.protocol = protocol;
     }
 
-
 }

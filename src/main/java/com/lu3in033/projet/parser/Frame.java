@@ -24,8 +24,10 @@ public class Frame {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Frame frame = (Frame) o;
         return id == frame.id && buffer.equals(frame.buffer);
     }

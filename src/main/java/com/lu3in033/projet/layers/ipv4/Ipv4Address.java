@@ -9,10 +9,7 @@ public class Ipv4Address {
 
     @Override
     public String toString() {
-        return String.format("%d.%d.%d.%d",
-                address & 0xFF000000,
-                address & 0x00FF0000,
-                address & 0x0000FF00,
+        return String.format("%d.%d.%d.%d", address & 0xFF000000, address & 0x00FF0000, address & 0x0000FF00,
                 address & 0x000000FF);
     }
 }

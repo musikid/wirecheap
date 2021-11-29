@@ -14,8 +14,7 @@ public class StatefulFragment extends Fragment {
     }
 
     public StatefulFragment(Fragment f, int id) {
-        super(f.offset, f.buffer);
-        this.id = id;
+        this(f.offset, f.buffer, id);
     }
 
     @Override
@@ -23,14 +22,15 @@ public class StatefulFragment extends Fragment {
         return new StringJoiner("\n\t", StatefulFragment.class.getSimpleName() + " {\n\t", "\n}")
                 .add(String.format("Offset: 0x%02x", offset))
                 .add("Buffer: " + buffer.stream().map(b -> String.format("%02x", b)).collect(Collectors.toList()))
-                .add(String.format("Frame number: %d", id))
-                .toString();
+                .add(String.format("Frame number: %d", id)).toString();
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         StatefulFragment fragment = (StatefulFragment) o;
         return offset == fragment.offset && id == fragment.id && buffer.equals(fragment.buffer);
     }

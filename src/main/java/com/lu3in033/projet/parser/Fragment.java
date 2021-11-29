@@ -24,8 +24,10 @@ public class Fragment {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Fragment fragment = (Fragment) o;
         return offset == fragment.offset && buffer.equals(fragment.buffer);
     }

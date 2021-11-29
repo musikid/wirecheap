@@ -21,22 +21,9 @@ public class Ipv4 extends Layer {
     public final Ipv4Address dest;
     public final List<Ipv4Option> options;
 
-    public Ipv4(
-            byte version,
-            byte headerLength,
-            byte typeOfService,
-            short totalLength,
-            short id,
-            byte flags,
-            short fragmentOffset,
-            byte ttl,
-            byte nextHeaderProtocol,
-            short checksum,
-            Ipv4Address source,
-            Ipv4Address dest,
-            List<Ipv4Option> options,
-            List<Byte> payload
-    ) {
+    public Ipv4(byte version, byte headerLength, byte typeOfService, short totalLength, short id, byte flags,
+                short fragmentOffset, byte ttl, byte nextHeaderProtocol, short checksum, Ipv4Address source,
+                Ipv4Address dest, List<Ipv4Option> options, List<Byte> payload) {
         super(payload);
         this.version = version;
         this.headerLength = headerLength;
@@ -55,20 +42,11 @@ public class Ipv4 extends Layer {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", Ipv4.class.getSimpleName() + "[", "]")
-                .add("Version: " + version)
-                .add("Header length: " + headerLength)
-                .add("Type of service: " + typeOfService)
-                .add("Total length: " + totalLength)
-                .add("Id: " + id)
-                .add("Flags: " + flags)
-                .add("Fragment offset: " + fragmentOffset)
-                .add("Ttl: " + ttl)
-                .add("Next header protocol: " + nextHeaderProtocol)
-                .add("Checksum: " + checksum)
-                .add("Source: " + source)
-                .add("Destination: " + dest)
-                .add("Options: " + options)
-                .toString();
+        return new StringJoiner("\n ➔", "", "]").add("Version: " + version)
+                .add("Header length: " + headerLength).add("Type of service: " + typeOfService)
+                .add("Total length: " + totalLength).add("Id: " + id).add("Flags: " + flags)
+                .add("Fragment offset: " + fragmentOffset).add("TTL: " + ttl)
+                .add("Next header protocol: " + nextHeaderProtocol).add("Checksum: " + checksum)
+                .add("Source: " + source).add("Destination: " + dest).add("Options: " + options).toString();
     }
 }

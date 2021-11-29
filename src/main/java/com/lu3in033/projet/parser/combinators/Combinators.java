@@ -27,9 +27,7 @@ public abstract class Combinators {
      * @return Combinator<Character>
      */
     public static Combinator<Character> hexDigit() {
-        return satisfy(c -> Character.isDigit(c)
-                || c >= 'A' && c <= 'F'
-                || c >= 'a' && c <= 'f');
+        return satisfy(c -> Character.isDigit(c) || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f');
     }
 
     // TODO: Use a loop instead
@@ -64,8 +62,7 @@ public abstract class Combinators {
     }
 
     /**
-     * Parses an offset (an <i>Integer</i>) from a string of hexadecimal digits (with length > 2),
-     * for example "0000".
+     * Parses an offset (an <i>Integer</i>) from a string of hexadecimal digits (with length > 2), for example "0000".
      *
      * @return Combinator<Integer>
      * @see Combinators#hexDigit()
@@ -78,10 +75,7 @@ public abstract class Combinators {
                 if (!c.apply(state))
                     return false;
 
-                String offsetString = c.getResult(state)
-                        .stream()
-                        .map(String::valueOf)
-                        .collect(Collectors.joining());
+                String offsetString = c.getResult(state).stream().map(String::valueOf).collect(Collectors.joining());
 
                 state.setResult(Integer.parseInt(offsetString, 16));
                 return true;
@@ -93,6 +87,7 @@ public abstract class Combinators {
      * Parses a byte from a string of format "FF".
      *
      * @return Combinator<Byte>
+     *
      * @see Combinators#hexDigit()
      */
     public static Combinator<Byte> hexByte() {
@@ -103,10 +98,7 @@ public abstract class Combinators {
                 if (!c.apply(state))
                     return false;
 
-                String byteString = c.getResult(state)
-                        .stream()
-                        .map(String::valueOf)
-                        .collect(Collectors.joining());
+                String byteString = c.getResult(state).stream().map(String::valueOf).collect(Collectors.joining());
 
                 state.setResult((byte) Integer.parseInt(byteString, 16));
                 return true;

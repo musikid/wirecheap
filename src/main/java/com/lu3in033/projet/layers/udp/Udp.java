@@ -10,10 +10,7 @@ public class Udp extends Layer {
     public short length;
     public short checksum;
 
-    public Udp(short destPort,
-               short srcPort,
-               short length,
-               short checksum, List<Byte> payload) {
+    public Udp(short destPort, short srcPort, short length, short checksum, List<Byte> payload) {
         super(payload);
         this.destPort = destPort;
         this.srcPort = srcPort;

@@ -1,10 +1,15 @@
 package com.lu3in033.projet.parser;
 
-import com.lu3in033.projet.parser.combinators.*;
+import com.lu3in033.projet.parser.combinators.Checkpoint;
+import com.lu3in033.projet.parser.combinators.Combinator;
+import com.lu3in033.projet.parser.combinators.ParseException;
+import com.lu3in033.projet.parser.combinators.State;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.lu3in033.projet.parser.combinators.Combinators.*;
 
 public class Parser {
     private int dataLength = 0;
@@ -19,9 +24,9 @@ public class Parser {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
                 Object result = state.getResult();
-                if (Combinators.hexOffset().apply(state))
+                if (hexOffset().apply(state))
                     return false;
-                if (!Combinators.skipTo(Combinators.newline()).apply(state))
+                if (!skipTo(newline()).apply(state))
                     return false;
 
                 state.setResult(result);
@@ -35,26 +40,26 @@ public class Parser {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
-                if (!Combinators.hexOffset().apply(state))
+                if (!hexOffset().apply(state))
                     return false;
 
-                int offset = Combinators.hexOffset().getResult(state);
+                int offset = hexOffset().getResult(state);
 
                 // We skip spaces
-                Combinators.spaces().apply(state);
+                spaces().apply(state);
 
                 // Parse the bytes
-                Combinator<List<Byte>> bytesParser = Combinators.many1(Combinators.hexByte().skip(Combinators.space()));
+                Combinator<List<Byte>> bytesParser = many1(hexByte().skip(space()));
                 if (!bytesParser.apply(state))
                     return false;
 
                 List<Byte> bytes = bytesParser.getResult(state);
 
-                if (!Combinators.space().apply(state))
+                if (!space().apply(state))
                     return false;
 
                 // We skip everything until newline
-                Combinators.skipTo(Combinators.newline()).apply(state);
+                skipTo(newline()).apply(state);
 
                 Fragment fragment = new Fragment(offset, bytes);
                 state.setResult(fragment);
@@ -76,6 +81,7 @@ public class Parser {
 
                 Fragment f = fragment().getResult(state);
 
+                // If we have a new frame
                 if (f.offset == 0) {
                     dataLength = f.buffer.size();
                     frameId++;
@@ -83,6 +89,7 @@ public class Parser {
                     return true;
                 }
 
+                // If the current offset equals the previous data length
                 if (dataLength == f.offset) {
                     dataLength += f.buffer.size();
                     state.setResult(new StatefulFragment(f, frameId));
@@ -96,23 +103,26 @@ public class Parser {
     }
 
     Combinator<List<StatefulFragment>> fragments() {
-        return Combinators.manyTill(statefulFragment().skip(Combinators.many(commentLine())), Combinators.eof());
+        return manyTill(statefulFragment().skip(many(commentLine())), eof());
     }
 
     // TODO: Java streams are slow compared to loops
     public List<Frame> parse(String buffer) throws ParseException {
-        dataLength = 0;
-        frameId = 0;
+        this.reset();
 
         List<StatefulFragment> fragments = fragments().parse(buffer);
         Map<Integer, List<StatefulFragment>> map = fragments.stream().collect(Collectors.groupingBy(f -> f.id));
-        return map.entrySet().stream()
-                .map(e -> {
-                            int id = e.getKey();
-                            List<Byte> mergedBuffer = e.getValue().stream().flatMap(f -> f.buffer.stream()).collect(Collectors.toList());
-                            return new Frame(id, mergedBuffer);
-                        }
-                )
-                .collect(Collectors.toList());
+
+        return map.entrySet().stream().map(e -> {
+            int id = e.getKey();
+            List<Byte> mergedBuffer = e.getValue().stream().flatMap(f -> f.buffer.stream())
+                    .collect(Collectors.toList());
+            return new Frame(id, mergedBuffer);
+        }).collect(Collectors.toList());
+    }
+
+    void reset() {
+        dataLength = 0;
+        frameId = 0;
     }
 }
