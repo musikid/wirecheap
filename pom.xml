@@ -7,6 +7,9 @@
     <groupId>com.lu3in033.projet</groupId>
     <artifactId>Wirecheap</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <name>Wirecheap</name>
+    <description>Wireshark, but it's cheaper.</description>
+    <url>https://gitlab.com/musikid/wirecheap</url>
 
     <build>
         <plugins>
@@ -123,6 +126,22 @@
         </profile>
     </profiles>
 
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.7</version>
+            </plugin>
+        </plugins>
+    </reporting>
 
     <dependencies>
         <dependency>
