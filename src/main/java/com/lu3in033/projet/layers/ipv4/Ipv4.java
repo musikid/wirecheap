@@ -6,13 +6,14 @@ import java.util.List;
 import java.util.StringJoiner;
 
 public class Ipv4 extends Layer {
+    public static final int MIN_HEADER_LENGTH = 20;
     public final byte version;
     public final byte headerLength;
     // dscp + ecn
-    public final byte typeOfService;
+    public final TypeOfService typeOfService;
     public final short totalLength;
     public final short id;
-    public final byte flags;
+    public final Ipv4Flags flags;
     public final short fragmentOffset;
     public final byte ttl;
     public final NextHeaderProtocol nextHeaderProtocol;
@@ -27,10 +28,11 @@ public class Ipv4 extends Layer {
         super(payload);
         this.version = version;
         this.headerLength = headerLength;
-        this.typeOfService = typeOfService;
+        this.typeOfService = new TypeOfService(typeOfService);
         this.totalLength = totalLength;
         this.id = id;
-        this.flags = flags;
+        // We consider that only the three last bits are used
+        this.flags = new Ipv4Flags(flags);
         this.fragmentOffset = fragmentOffset;
         this.ttl = ttl;
         this.nextHeaderProtocol = new NextHeaderProtocol(nextHeaderProtocol);
@@ -42,10 +44,9 @@ public class Ipv4 extends Layer {
 
     @Override
     public String toString() {
-        return new StringJoiner("\n ➔", "", "]").add("Version: " + version)
-                .add("Header length: " + headerLength).add("Type of service: " + typeOfService)
-                .add("Total length: " + totalLength).add("Id: " + id).add("Flags: " + flags)
-                .add("Fragment offset: " + fragmentOffset).add("TTL: " + ttl)
+        return new StringJoiner("\n ➔", "", "]").add("Version: " + version).add("Header length: " + headerLength)
+                .add("Type of service: " + typeOfService).add("Total length: " + totalLength).add("Id: " + id)
+                .add("Flags: " + flags).add("Fragment offset: " + fragmentOffset).add("TTL: " + ttl)
                 .add("Next header protocol: " + nextHeaderProtocol).add("Checksum: " + checksum)
                 .add("Source: " + source).add("Destination: " + dest).add("Options: " + options).toString();
     }
