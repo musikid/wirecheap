@@ -47,14 +47,14 @@
                 <configuration>
                     <encoding>UTF-8</encoding>
                 </configuration>
-                <executions>
+                <!-- <executions>
                     <execution>
                         <goals>
                             <goal>validate</goal>
                             <goal>format</goal>
                         </goals>
                     </execution>
-                </executions>
+                </executions> -->
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
