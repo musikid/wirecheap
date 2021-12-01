@@ -51,8 +51,11 @@ public abstract class Combinators {
     /**
      * Apply the combinator <i>cb</i> between <i>min</i> and <i>max</i> times.
      *
-     * @param combinator Combinator to repeat
-     * @param <O>        Combinator output
+     * @param combinator
+     *            Combinator to repeat
+     * @param <O>
+     *            Combinator output
+     *
      * @return Combinator&lt;List&lt;O&gt;&gt;
      */
     public static <O> Combinator<List<O>> count(int min, int max, Combinator<O> combinator) {
@@ -131,6 +134,7 @@ public abstract class Combinators {
      * Parses the space character.
      *
      * @return Combinator&lt;Character&gt;
+     *
      * @see Combinators#hexDigit()
      */
     public static Combinator<Character> space() {
@@ -149,7 +153,9 @@ public abstract class Combinators {
     /**
      * Apply <i>skip</i> while it succeeds and skip its result.
      *
-     * @param skip Skip combinator
+     * @param skip
+     *            Skip combinator
+     *
      * @return Combinator&lt;Void&gt;
      */
     public static Combinator<Void> skipTo(Combinator<?> skip) {
@@ -167,8 +173,11 @@ public abstract class Combinators {
     /**
      * Apply the combinator <i>cb</i> zero or more times.
      *
-     * @param cb  Combinator to repeat
-     * @param <O> Combinator output
+     * @param cb
+     *            Combinator to repeat
+     * @param <O>
+     *            Combinator output
+     *
      * @return Combinator&lt;List&lt;O&gt;&gt;
      */
     public static <O> Combinator<List<O>> many(Combinator<O> cb) {
@@ -178,8 +187,11 @@ public abstract class Combinators {
     /**
      * Apply the combinator <i>cb</i> at least once, or more times.
      *
-     * @param cb  Combinator to repeat
-     * @param <O> Combinator output
+     * @param cb
+     *            Combinator to repeat
+     * @param <O>
+     *            Combinator output
+     *
      * @return Combinator&lt;List&lt;O&gt;&gt;
      */
     public static <O> Combinator<List<O>> many1(Combinator<O> cb) {
@@ -189,9 +201,13 @@ public abstract class Combinators {
     /**
      * Apply the combinator <i>cb</i> until it fails and succeeds when <i>delim</i> immediately follow it.
      *
-     * @param cb    Combinator to repeat
-     * @param <O>   Combinator output
-     * @param delim Delimiter
+     * @param cb
+     *            Combinator to repeat
+     * @param <O>
+     *            Combinator output
+     * @param delim
+     *            Delimiter
+     *
      * @return Combinator&lt;List&lt;O&gt;&gt;
      */
     public static <O> Combinator<List<O>> manyTill(Combinator<O> cb, Combinator<?> delim) {
