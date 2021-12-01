@@ -7,6 +7,11 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public abstract class Combinators {
+    /**
+     * Parses a character if it satisfies <i>f</i>.
+     *
+     * @return Combinator&lt;Character&gt;
+     */
     public static Combinator<Character> satisfy(Predicate<Character> f) {
         return new Combinator<>() {
             @Override
@@ -24,17 +29,32 @@ public abstract class Combinators {
     /**
      * Parses an hexadecimal digit.
      *
-     * @return Combinator<Character>
+     * @return Combinator&lt;Character&gt;
      */
     public static Combinator<Character> hexDigit() {
         return satisfy(c -> Character.isDigit(c) || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f');
     }
 
     // TODO: Use a loop instead
+
+    /**
+     * Apply the combinator <i>cb</i> <i>min</i> or more times.
+     *
+     * @param combinator Combinator to repeat
+     * @param <O>        Combinator output
+     * @return Combinator&lt;List&lt;O&gt;&gt;
+     */
     public static <O> Combinator<List<O>> count(int min, Combinator<O> combinator) {
         return count(min, Integer.MAX_VALUE, combinator);
     }
 
+    /**
+     * Apply the combinator <i>cb</i> between <i>min</i> and <i>max</i> times.
+     *
+     * @param combinator Combinator to repeat
+     * @param <O>        Combinator output
+     * @return Combinator&lt;List&lt;O&gt;&gt;
+     */
     public static <O> Combinator<List<O>> count(int min, int max, Combinator<O> combinator) {
         return new Combinator<>() {
             @Override
@@ -64,7 +84,8 @@ public abstract class Combinators {
     /**
      * Parses an offset (an <i>Integer</i>) from a string of hexadecimal digits (with length > 2), for example "0000".
      *
-     * @return Combinator<Integer>
+     * @return Combinator&lt;Integer&gt;
+     *
      * @see Combinators#hexDigit()
      */
     public static Combinator<Integer> hexOffset() {
@@ -86,7 +107,7 @@ public abstract class Combinators {
     /**
      * Parses a byte from a string of format "FF".
      *
-     * @return Combinator<Byte>
+     * @return Combinator&lt;Byte&gt;
      *
      * @see Combinators#hexDigit()
      */
@@ -106,6 +127,12 @@ public abstract class Combinators {
         };
     }
 
+    /**
+     * Parses the space character.
+     *
+     * @return Combinator&lt;Character&gt;
+     * @see Combinators#hexDigit()
+     */
     public static Combinator<Character> space() {
         return satisfy(c -> c == ' ');
     }
@@ -114,13 +141,17 @@ public abstract class Combinators {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
-                many(space()).apply(state);
-
-                return true;
+                return many(space()).apply(state);
             }
         };
     }
 
+    /**
+     * Apply <i>skip</i> while it succeeds and skip its result.
+     *
+     * @param skip Skip combinator
+     * @return Combinator&lt;Void&gt;
+     */
     public static Combinator<Void> skipTo(Combinator<?> skip) {
         return new Combinator<>() {
             @Override
@@ -133,14 +164,36 @@ public abstract class Combinators {
         };
     }
 
+    /**
+     * Apply the combinator <i>cb</i> zero or more times.
+     *
+     * @param cb  Combinator to repeat
+     * @param <O> Combinator output
+     * @return Combinator&lt;List&lt;O&gt;&gt;
+     */
     public static <O> Combinator<List<O>> many(Combinator<O> cb) {
         return count(0, cb);
     }
 
+    /**
+     * Apply the combinator <i>cb</i> at least once, or more times.
+     *
+     * @param cb  Combinator to repeat
+     * @param <O> Combinator output
+     * @return Combinator&lt;List&lt;O&gt;&gt;
+     */
     public static <O> Combinator<List<O>> many1(Combinator<O> cb) {
         return count(1, cb);
     }
 
+    /**
+     * Apply the combinator <i>cb</i> until it fails and succeeds when <i>delim</i> immediately follow it.
+     *
+     * @param cb    Combinator to repeat
+     * @param <O>   Combinator output
+     * @param delim Delimiter
+     * @return Combinator&lt;List&lt;O&gt;&gt;
+     */
     public static <O> Combinator<List<O>> manyTill(Combinator<O> cb, Combinator<?> delim) {
         return new Combinator<>() {
             @Override
@@ -160,6 +213,11 @@ public abstract class Combinators {
         };
     }
 
+    /**
+     * Apply the combinator <i>cb</i> until it fails and succeeds when <i>delim</i> immediately follow it.
+     *
+     * @return Combinator&lt;Void&gt;
+     */
     public static Combinator<Void> eof() {
         return new Combinator<>() {
             @Override
