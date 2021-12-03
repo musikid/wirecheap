@@ -34,6 +34,17 @@ coverage:
     reports:
       cobertura: target/site/cobertura.xml
 
+pages:
+  stage: deploy
+  script:
+    - mvn $MAVEN_CLI_OPTS site --DoutputDirectory=public
+    - mv target/site public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
 .upload-release:
   stage: deploy
   script:
