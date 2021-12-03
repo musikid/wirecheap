@@ -37,7 +37,7 @@ coverage:
 pages:
   stage: deploy
   script:
-    - mvn $MAVEN_CLI_OPTS site --DoutputDirectory=public
+    - mvn $MAVEN_CLI_OPTS site -DoutputDirectory=public
     - mv target/site public
   artifacts:
     paths:
