@@ -25,7 +25,7 @@ public class Ethernet extends Layer {
 
         MacAddress src = MacAddress.create(frame.subList(0, 6));
         MacAddress dest = MacAddress.create(frame.subList(6, 12));
-        short rawType = (short) (frame.get(13) | frame.get(14));
+        short rawType = (short) (frame.get(12) << 8 | frame.get(13));
         EtherType type = new EtherType(rawType);
         List<Byte> payload = frame.subList(14, frame.size());
 
