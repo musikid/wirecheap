@@ -7,6 +7,6 @@ public final class LayerUtils {
     }
 
     public static short getShort(List<Byte> bytes, int i) {
-        return (short) (bytes.get(i) << 8 | bytes.get(i + 1));
+        return (short) (bytes.get(i) << 8 | bytes.get(i + 1) & 0xFF);
     }
 }

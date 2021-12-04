@@ -55,18 +55,22 @@ public class Ipv4 extends Layer {
         TypeOfService typeOfService = new TypeOfService(bytes.get(1));
         short totalLength = LayerUtils.getShort(bytes, 2);
         short id = LayerUtils.getShort(bytes, 4);
-        //TODO: Check if flags and offset are in this order
-        Ipv4Flags flags = new Ipv4Flags(bytes.get(6));
-        short fragmentOffset = (short) (bytes.get(6) >> 3 | bytes.get(7));
+
+        Ipv4Flags flags = new Ipv4Flags((byte) (bytes.get(6) >> 5));
+        short fragmentOffset = (short) ((bytes.get(6) & 0b00011111) << 8 | bytes.get(7));
+
         byte ttl = bytes.get(8);
+
         NextHeaderProtocol protocol = new NextHeaderProtocol(bytes.get(9));
         short checksum = LayerUtils.getShort(bytes, 10);
-        Ipv4Address source = new Ipv4Address(bytes.get(12) << 24 | bytes.get(13) << 16 | bytes.get(14) << 8 | bytes.get(15));
-        Ipv4Address dest = new Ipv4Address(bytes.get(16) << 24 | bytes.get(17) << 16 | bytes.get(18) << 8 | bytes.get(19));
+
+        Ipv4Address source = Ipv4Address.create(bytes.subList(12, 16));
+        Ipv4Address dest = Ipv4Address.create(bytes.subList(16, 20));
+
         //TODO: We don't parse options for now
         return new Ipv4(version, headerLength, typeOfService, totalLength,
                 id, flags, fragmentOffset, ttl, protocol, checksum, source, dest,
-                new ArrayList<>(), bytes.subList(headerLength * 4 - 1, bytes.size()));
+                new ArrayList<>(), bytes.subList((headerLength * 4) - 1, bytes.size()));
     }
 
     /**
@@ -80,10 +84,20 @@ public class Ipv4 extends Layer {
 
     @Override
     public String toString() {
-        return new StringJoiner("\n ➔", "", "]").add("Version: " + version).add("Header length: " + headerLength)
-                .add("Type of service: " + typeOfService).add("Total length: " + totalLength).add("Id: " + id)
-                .add("Flags: " + flags).add("Fragment offset: " + fragmentOffset).add("TTL: " + ttl)
-                .add("Next header protocol: " + nextHeaderProtocol).add("Checksum: " + checksum)
-                .add("Source: " + source).add("Destination: " + dest).add("Options: " + options).toString();
+        return new StringJoiner("\n -> ", Ipv4.class.getSimpleName() + "\n -> ", "\n")
+                .add("Version: " + version)
+                .add("Header length: " + headerLength)
+                .add("Type of service: " + typeOfService)
+                .add("Total length: " + totalLength)
+                .add("Id: " + id)
+                .add("Flags: " + "\n    " + flags.toString().replaceAll("\n", "\n    "))
+                .add("Fragment offset: " + fragmentOffset)
+                .add("TTL: " + ttl)
+                .add("Next header protocol: " + nextHeaderProtocol)
+                .add("Checksum: " + String.format("0x%04x", Short.toUnsignedInt(checksum)))
+                .add("Source: " + source)
+                .add("Destination: " + dest)
+                .add("Options: " + options)
+                .toString();
     }
 }

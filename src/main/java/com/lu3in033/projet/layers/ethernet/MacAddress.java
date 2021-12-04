@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.StringJoiner;
 
 public class MacAddress {
-    public final byte[] buffer;
+    public final Byte[] buffer;
 
-    public MacAddress(byte[] buf) {
+    public MacAddress(Byte[] buf) {
         assert (buf != null);
         assert (buf.length == 6);
         buffer = buf;
@@ -20,10 +20,8 @@ public class MacAddress {
             throw new NotEnoughBytesException(6, b.size());
         }
 
-        byte[] buf = new byte[6];
-        for (int i = 0; i < 6; i++) {
-            buf[i] = b.get(i);
-        }
+        Byte[] buf = new Byte[6];
+        b.toArray(buf);
 
         return new MacAddress(buf);
     }
