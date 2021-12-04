@@ -4,6 +4,7 @@ import com.lu3in033.projet.layers.Layer;
 import com.lu3in033.projet.layers.NotEnoughBytesException;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 public class Ethernet extends Layer {
     public static int HEADER_LENGTH = 14;
@@ -30,5 +31,14 @@ public class Ethernet extends Layer {
         List<Byte> payload = frame.subList(14, frame.size());
 
         return new Ethernet(dest, src, type, payload);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner("\n -> ", Ethernet.class.getSimpleName() + "\n -> ", "\n")
+                .add("Source: " + src)
+                .add("Destination: " + dest)
+                .add(String.format("Type: 0x%04x (%s)", type.value(), type.name()))
+                .toString();
     }
 }

@@ -7,7 +7,11 @@ public class EtherType {
         type = t;
     }
 
-    public short type() {
+    public short value() {
         return type;
+    }
+
+    String name() {
+        return EtherTypes.valueNameFor(type).orElse("Unknown");
     }
 }

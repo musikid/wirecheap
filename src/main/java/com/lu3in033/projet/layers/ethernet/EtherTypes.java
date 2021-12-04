@@ -1,7 +1,10 @@
 package com.lu3in033.projet.layers.ethernet;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 public enum EtherTypes {
-    Ipv4(0x0800);
+    IPv4(0x0800);
 
     private final int value;
 
@@ -11,5 +14,9 @@ public enum EtherTypes {
 
     public int value() {
         return value;
+    }
+
+    public static Optional<String> valueNameFor(int t) {
+        return Arrays.stream(EtherTypes.values()).filter(v -> v.value() == t).findFirst().map(EtherTypes::name);
     }
 }
