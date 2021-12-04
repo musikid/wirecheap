@@ -5,6 +5,7 @@ import com.lu3in033.projet.layers.LayerUtils;
 import com.lu3in033.projet.layers.NotEnoughBytesException;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 public class Udp extends Layer {
     public static int HEADER_LENGTH = 8;
@@ -33,5 +34,15 @@ public class Udp extends Layer {
         List<Byte> payload = bytes.subList(8, bytes.size());
 
         return new Udp(destPort, srcPort, length, checksum, payload);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner("\n -> ", Udp.class.getSimpleName() + "\n -> ", "\n")
+                .add("Destination port: " + Short.toUnsignedInt(destPort))
+                .add("Source port: " + Short.toUnsignedInt(srcPort))
+                .add("Length: " + Short.toUnsignedInt(length))
+                .add("Checksum: " + String.format("0x%04x", Short.toUnsignedInt(checksum)))
+                .toString();
     }
 }
