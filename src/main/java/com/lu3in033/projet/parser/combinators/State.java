@@ -1,6 +1,5 @@
 package com.lu3in033.projet.parser.combinators;
 
-import java.util.Collections;
 import java.util.Optional;
 
 public class State<S extends CharSequence> {
@@ -49,9 +48,9 @@ public class State<S extends CharSequence> {
             return new Location(1, 0);
         }
 
-        CharSequence before = source.subSequence(0, pos - 1);
+        String before = source.subSequence(0, pos).toString();
         long line = before.chars().filter(c -> c == NEWLINE).count() + 1;
-        long col = pos - before.chars().boxed().sorted(Collections.reverseOrder()).takeWhile(c -> c != NEWLINE).count();
+        long col = pos - before.lastIndexOf(NEWLINE);
         return new Location(line, col);
 
     }
