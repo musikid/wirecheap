@@ -2,6 +2,23 @@
 
 ## Wireshark, but it's cheaper (and less good).
 
+## Requirements
+
+- Java 17
+- Maven
+
+## Build
+
+```shell
+mvn package
+```
+
+## Execute
+
+```shell
+java -jar target/Wirecheap*.jar
+```
+
 ## Project structure
 
 ### src/main/java/com/lu3in033/projet
