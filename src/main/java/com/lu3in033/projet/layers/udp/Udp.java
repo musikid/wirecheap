@@ -1,10 +1,13 @@
 package com.lu3in033.projet.layers.udp;
 
 import com.lu3in033.projet.layers.Layer;
+import com.lu3in033.projet.layers.LayerUtils;
+import com.lu3in033.projet.layers.NotEnoughBytesException;
 
 import java.util.List;
 
 public class Udp extends Layer {
+    public static int HEADER_LENGTH = 8;
     public short destPort;
     public short srcPort;
     public short length;
@@ -16,5 +19,19 @@ public class Udp extends Layer {
         this.srcPort = srcPort;
         this.length = length;
         this.checksum = checksum;
+    }
+
+    public static Udp create(List<Byte> bytes) throws NotEnoughBytesException {
+        if (bytes.size() < HEADER_LENGTH) {
+            throw new NotEnoughBytesException(HEADER_LENGTH, bytes.size());
+        }
+
+        short destPort = LayerUtils.getShort(bytes, 0);
+        short srcPort = LayerUtils.getShort(bytes, 2);
+        short length = LayerUtils.getShort(bytes, 4);
+        short checksum = LayerUtils.getShort(bytes, 6);
+        List<Byte> payload = bytes.subList(8, bytes.size());
+
+        return new Udp(destPort, srcPort, length, checksum, payload);
     }
 }
