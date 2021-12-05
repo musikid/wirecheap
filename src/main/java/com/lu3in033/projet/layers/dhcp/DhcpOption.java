@@ -1,14 +1,14 @@
 package com.lu3in033.projet.layers.dhcp;
 
-import java.util.List;
+import java.nio.ByteBuffer;
 import java.util.StringJoiner;
 
 public class DhcpOption {
-    public final DhcpOptionType type;
+    public final int type;
     public final byte length;
-    public final List<Byte> data;
+    public final ByteBuffer data;
 
-    public DhcpOption(DhcpOptionType type, byte length, List<Byte> data) {
+    public DhcpOption(int type, byte length, ByteBuffer data) {
         this.type = type;
         this.length = length;
         this.data = data;
