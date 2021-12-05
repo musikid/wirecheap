@@ -1,5 +1,6 @@
 package com.lu3in033.projet;
 
+import com.lu3in033.projet.layers.dhcp.Dhcp;
 import com.lu3in033.projet.layers.ethernet.EtherTypes;
 import com.lu3in033.projet.layers.ethernet.Ethernet;
 import com.lu3in033.projet.layers.ipv4.Ipv4;
@@ -40,6 +41,10 @@ public class Main {
 
             Udp udp = Udp.create(frame.buffer);
             System.out.println(udp);
+            if (udp.destPort == 67 || udp.destPort == 68) {
+                Dhcp dhcp = Dhcp.create(frame.buffer);
+                System.out.println(dhcp);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

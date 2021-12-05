@@ -15,7 +15,7 @@ interface DhcpOptionFormatter extends Function<ByteBuffer, String> {
     DhcpOptionFormatter UNSIGNED_SHORT = byteBuffer -> Integer.toUnsignedString(byteBuffer.getShort());
     DhcpOptionFormatter INTEGER = byteBuffer -> Integer.toString(byteBuffer.getInt());
     DhcpOptionFormatter RAW_HEX = byteBuffer -> Integer.toUnsignedString(byteBuffer.getInt());
-    DhcpOptionFormatter BOOLEAN = b -> b.get() == 1 ? "Enable" : "Disable";
+    DhcpOptionFormatter BOOLEAN = b -> b.get() == 1 ? "Enabled" : "Disabled";
     DhcpOptionFormatter IP = byteBuffer -> {
         try {
             return Ipv4Address.create(byteBuffer).toString();
