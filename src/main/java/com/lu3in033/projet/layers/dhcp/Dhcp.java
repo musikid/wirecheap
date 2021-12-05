@@ -1,6 +1,7 @@
 package com.lu3in033.projet.layers.dhcp;
 
 import com.lu3in033.projet.layers.NotEnoughBytesException;
+import com.lu3in033.projet.layers.ethernet.MacAddress;
 import com.lu3in033.projet.layers.ipv4.Ipv4Address;
 
 import java.nio.ByteBuffer;
@@ -9,12 +10,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 public class Dhcp {
-    public static final int MIN_PACKET_LENGTH = 312;
+    public static final int MIN_PACKET_LENGTH = 288;
 
-    public final byte op;
-    public final byte htype;
+    public final Opcode op;
+    public final HardwareType htype;
     public final byte hlen;
     public final byte hops;
     public final int xid;
@@ -29,7 +31,7 @@ public class Dhcp {
     public final String file;
     public final List<DhcpOption> options;
 
-    public Dhcp(byte code, byte htype, byte hlen, byte hops, int xid, short secs, DhcpFlags flags,
+    public Dhcp(Opcode code, HardwareType htype, byte hlen, byte hops, int xid, short secs, DhcpFlags flags,
                 Ipv4Address ciaddr, Ipv4Address yiaddr, Ipv4Address siaddr, Ipv4Address giaddr,
                 byte[] chaddr, String sname, String file, List<DhcpOption> options) {
         this.op = code;
@@ -54,21 +56,21 @@ public class Dhcp {
             throw new NotEnoughBytesException(MIN_PACKET_LENGTH, bytes.remaining());
         }
 
-        byte op = bytes.get();
-        byte htype = bytes.get();
+        Opcode op = new Opcode(bytes.get());
+        HardwareType htype = new HardwareType(bytes.get());
         byte hlen = bytes.get();
         byte hops = bytes.get();
         int xid = bytes.getInt();
         short secs = bytes.getShort();
-        short flags = bytes.getShort();
+        DhcpFlags flags = new DhcpFlags(bytes.getShort());
 
         Ipv4Address ciaddr = Ipv4Address.create(bytes);
         Ipv4Address yiaddr = Ipv4Address.create(bytes);
         Ipv4Address siaddr = Ipv4Address.create(bytes);
         Ipv4Address giaddr = Ipv4Address.create(bytes);
 
-        byte[] rawChaddr = new byte[16];
-        bytes.get(rawChaddr);
+        byte[] chaddr = new byte[16];
+        bytes.get(chaddr);
 
         byte[] rawSname = new byte[64];
         bytes.get(rawSname);
@@ -79,6 +81,7 @@ public class Dhcp {
         String file = StandardCharsets.US_ASCII.decode(ByteBuffer.wrap(rawFile)).toString();
 
         int magicCookie = bytes.getInt();
+
         // Options magic happens here
         List<DhcpOption> options = new ArrayList<>();
         int type = bytes.get();
@@ -87,36 +90,43 @@ public class Dhcp {
             if (DhcpOptions.FIXED_LENGTH.contains(type)) {
                 option = new DhcpOption(type, (byte) 1, ByteBuffer.allocate(0));
             } else {
-                byte length = bytes.get();
+                byte length = (byte) (bytes.get() & 0xFF);
                 ByteBuffer data = ByteBuffer.allocate(length);
-                bytes.put(data.array());
+                bytes.get(data.array());
                 option = new DhcpOption(type, length, data);
             }
 
             options.add(option);
+            type = bytes.get();
         } while ((type & 0xFF) != DhcpOptions.EndOfOptions.value);
 
-        return null;
+        return new Dhcp(op, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr,
+                giaddr, chaddr, sname, file, options);
     }
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", Dhcp.class.getSimpleName() + "[", "]")
-                .add("op=" + op)
-                .add("htype=" + htype)
-                .add("hlen=" + hlen)
-                .add("hops=" + hops)
-                .add("xid=" + xid)
-                .add("secs=" + secs)
-                .add("flags=" + flags)
-                .add("ciaddr=" + ciaddr)
-                .add("yiaddr=" + yiaddr)
-                .add("siaddr=" + siaddr)
-                .add("giaddr=" + giaddr)
-                .add("chaddr=" + Arrays.toString(chaddr))
-                .add("sname='" + sname + "'")
-                .add("file='" + file + "'")
-                .add("options=" + options)
+        String chaddrString = (htype.rawValue == HardwareType.HardwareTypes.Ethernet.value
+                ? new MacAddress(ByteBuffer.wrap(chaddr).slice(0, 6).array()).toString()
+                : Arrays.toString(chaddr));
+        String optionsStr = options.stream().map(DhcpOption::toString).collect(Collectors.joining("\n   -> "));
+
+        return new StringJoiner("\n -> ", "DHCP\n -> ", "\n")
+                .add("Message type: " + op)
+                .add("Hardware type: " + htype)
+                .add("Hardware address length: " + hlen)
+                .add("Hops: " + hops)
+                .add("Transaction ID: " + xid)
+                .add("Seconds elapsed: " + secs)
+                .add("Flags: " + flags)
+                .add("Client IP address: " + ciaddr)
+                .add("Your IP address: " + yiaddr)
+                .add("Next IP address: " + siaddr)
+                .add("Relay agent IP address: " + giaddr)
+                .add("Client Hardware address: " + chaddrString)
+                .add("Server host name: " + sname)
+                .add("Boot file name: " + file)
+                .add("Options: " + optionsStr)
                 .toString();
     }
 }

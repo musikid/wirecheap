@@ -1,7 +1,9 @@
 package com.lu3in033.projet.layers.dhcp;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public enum DhcpMessageTypes {
     Discover(1),
@@ -13,13 +15,16 @@ public enum DhcpMessageTypes {
     Release(7),
     Inform(8);
 
+    public final static Map<Integer, DhcpMessageTypes> VALUES = Arrays.stream(DhcpMessageTypes.values())
+            .collect(Collectors.toUnmodifiableMap(t -> t.value, t -> t));
+
     public int value;
 
     DhcpMessageTypes(int v) {
         value = v;
     }
 
-    public static Optional<DhcpMessageTypes> valueFor(int v) {
-        return Arrays.stream(DhcpMessageTypes.values()).filter(t -> t.value == v).findFirst();
+    public static Optional<DhcpMessageTypes> typeFor(int v) {
+        return Optional.ofNullable(VALUES.get(v));
     }
 }
