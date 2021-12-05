@@ -11,7 +11,6 @@ import com.lu3in033.projet.parser.Parser;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 
 public class Main {
     public static void main(String[] args) {
@@ -34,7 +33,7 @@ public class Main {
 
             Ipv4 ip = Ipv4.create(frame.buffer);
             System.out.println(ip);
-            if (!Objects.equals(ip.nextHeaderProtocol.name(), NextHeaderProtocols.UDP.name())) {
+            if (ip.nextHeaderProtocol.value != NextHeaderProtocols.UDP.value()) {
                 System.out.println("Payload: " + ip.payload());
                 return;
             }

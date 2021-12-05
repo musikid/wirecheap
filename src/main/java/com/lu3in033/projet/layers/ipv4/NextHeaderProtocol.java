@@ -3,19 +3,19 @@ package com.lu3in033.projet.layers.ipv4;
 import java.util.Arrays;
 
 public class NextHeaderProtocol {
-    public final byte protocol;
+    public final byte value;
 
     public NextHeaderProtocol(byte protocol) {
-        this.protocol = protocol;
+        value = protocol;
     }
 
     public String name() {
-        return Arrays.stream(NextHeaderProtocols.values()).filter(v -> v.value() == protocol)
+        return Arrays.stream(NextHeaderProtocols.values()).filter(v -> v.value() == value)
                 .findFirst().map(NextHeaderProtocols::name).orElse("Unknown");
     }
 
     @Override
     public String toString() {
-        return String.format("0x%02x (%s)", protocol, name());
+        return String.format("0x%02x (%s)", value, name());
     }
 }
