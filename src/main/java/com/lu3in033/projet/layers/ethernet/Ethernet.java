@@ -3,7 +3,7 @@ package com.lu3in033.projet.layers.ethernet;
 import com.lu3in033.projet.layers.Layer;
 import com.lu3in033.projet.layers.NotEnoughBytesException;
 
-import java.util.List;
+import java.nio.ByteBuffer;
 import java.util.StringJoiner;
 
 public class Ethernet extends Layer {
@@ -12,23 +12,23 @@ public class Ethernet extends Layer {
     public final MacAddress src;
     public final EtherType type;
 
-    public Ethernet(MacAddress d, MacAddress s, EtherType t, List<Byte> p) {
+    public Ethernet(MacAddress d, MacAddress s, EtherType t, ByteBuffer p) {
         super(p);
         dest = d;
         src = s;
         type = t;
     }
 
-    public static Ethernet create(List<Byte> frame) throws NotEnoughBytesException {
-        if (frame.size() < HEADER_LENGTH) {
-            throw new NotEnoughBytesException(HEADER_LENGTH, frame.size());
+    public static Ethernet create(ByteBuffer frame) throws NotEnoughBytesException {
+        if (frame.remaining() < HEADER_LENGTH) {
+            throw new NotEnoughBytesException(HEADER_LENGTH, frame.remaining());
         }
 
-        MacAddress dest = MacAddress.create(frame.subList(0, 6));
-        MacAddress src = MacAddress.create(frame.subList(6, 12));
-        short rawType = (short) (frame.get(12) << 8 | frame.get(13));
+        MacAddress dest = MacAddress.create(frame);
+        MacAddress src = MacAddress.create(frame);
+        short rawType = frame.getShort();
         EtherType type = new EtherType(rawType);
-        List<Byte> payload = frame.subList(14, frame.size());
+        ByteBuffer payload = frame.slice();
 
         return new Ethernet(dest, src, type, payload);
     }

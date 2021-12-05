@@ -1,9 +1,9 @@
 package com.lu3in033.projet.layers.ipv4;
 
 import com.lu3in033.projet.layers.Layer;
-import com.lu3in033.projet.layers.LayerUtils;
 import com.lu3in033.projet.layers.NotEnoughBytesException;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
@@ -27,7 +27,7 @@ public class Ipv4 extends Layer {
 
     public Ipv4(byte version, byte headerLength, TypeOfService typeOfService, short totalLength, short id, Ipv4Flags flags,
                 short fragmentOffset, byte ttl, NextHeaderProtocol nextHeaderProtocol, short checksum, Ipv4Address source,
-                Ipv4Address dest, List<Ipv4Option> options, List<Byte> payload) {
+                Ipv4Address dest, List<Ipv4Option> options, ByteBuffer payload) {
         super(payload);
         this.version = version;
         this.headerLength = headerLength;
@@ -45,41 +45,35 @@ public class Ipv4 extends Layer {
         this.options = options;
     }
 
-    public static Ipv4 create(List<Byte> bytes) throws NotEnoughBytesException {
-        if (bytes.size() < MIN_HEADER_LENGTH) {
-            throw new NotEnoughBytesException(MIN_HEADER_LENGTH, bytes.size());
+    public static Ipv4 create(ByteBuffer bytes) throws NotEnoughBytesException {
+        if (bytes.remaining() < MIN_HEADER_LENGTH) {
+            throw new NotEnoughBytesException(MIN_HEADER_LENGTH, bytes.remaining());
         }
 
-        byte version = (byte) (bytes.get(0) >> 4);
-        byte headerLength = (byte) (bytes.get(0) & 0xF);
-        TypeOfService typeOfService = new TypeOfService(bytes.get(1));
-        short totalLength = LayerUtils.getShort(bytes, 2);
-        short id = LayerUtils.getShort(bytes, 4);
+        byte vhByte = bytes.get();
+        byte version = (byte) (vhByte >> 4);
+        byte headerLength = (byte) (vhByte & 0xF);
 
-        Ipv4Flags flags = new Ipv4Flags((byte) (bytes.get(6) >> 5));
-        short fragmentOffset = (short) ((bytes.get(6) & 0b00011111) << 8 | bytes.get(7));
+        TypeOfService typeOfService = new TypeOfService(bytes.get());
+        short totalLength = bytes.getShort();
+        short id = bytes.getShort();
 
-        byte ttl = bytes.get(8);
+        byte flagsFragByte = bytes.get();
+        Ipv4Flags flags = new Ipv4Flags((byte) (flagsFragByte >> 5));
+        short fragmentOffset = (short) ((flagsFragByte & 0b00011111) << 8 | bytes.get());
 
-        NextHeaderProtocol protocol = new NextHeaderProtocol(bytes.get(9));
-        short checksum = LayerUtils.getShort(bytes, 10);
+        byte ttl = bytes.get();
 
-        Ipv4Address source = Ipv4Address.create(bytes.subList(12, 16));
-        Ipv4Address dest = Ipv4Address.create(bytes.subList(16, 20));
+        NextHeaderProtocol protocol = new NextHeaderProtocol(bytes.get());
+        short checksum = bytes.getShort();
+
+        Ipv4Address source = Ipv4Address.create(bytes);
+        Ipv4Address dest = Ipv4Address.create(bytes);
 
         //TODO: We don't parse options for now
         return new Ipv4(version, headerLength, typeOfService, totalLength,
                 id, flags, fragmentOffset, ttl, protocol, checksum, source, dest,
-                new ArrayList<>(), bytes.subList((headerLength * 4) - 1, bytes.size()));
-    }
-
-    /**
-     * Returns the header length in bytes.
-     *
-     * @return int
-     */
-    public int headerLength() {
-        return headerLength * 4;
+                new ArrayList<>(), bytes.slice());
     }
 
     @Override
@@ -88,11 +82,11 @@ public class Ipv4 extends Layer {
                 .add("Version: " + version)
                 .add("Header length: " + headerLength)
                 .add("Type of service: " + typeOfService)
-                .add("Total length: " + totalLength)
-                .add("Id: " + id)
+                .add("Total length: " + Short.toUnsignedInt(totalLength))
+                .add("Id: " + String.format("0x%04x", Short.toUnsignedInt(id)))
                 .add("Flags: " + "\n    " + flags.toString().replaceAll("\n", "\n    "))
                 .add("Fragment offset: " + fragmentOffset)
-                .add("TTL: " + ttl)
+                .add("TTL: " + Byte.toUnsignedInt(ttl))
                 .add("Next header protocol: " + nextHeaderProtocol)
                 .add("Checksum: " + String.format("0x%04x", Short.toUnsignedInt(checksum)))
                 .add("Source: " + source)

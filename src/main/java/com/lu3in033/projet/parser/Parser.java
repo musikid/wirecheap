@@ -5,6 +5,8 @@ import com.lu3in033.projet.parser.combinators.Combinator;
 import com.lu3in033.projet.parser.combinators.ParseException;
 import com.lu3in033.projet.parser.combinators.State;
 
+import java.nio.ByteBuffer;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -115,8 +117,14 @@ public class Parser {
 
         return map.entrySet().stream().map(e -> {
             int id = e.getKey();
-            List<Byte> mergedBuffer = e.getValue().stream().flatMap(f -> f.buffer.stream())
-                    .collect(Collectors.toList());
+            List<StatefulFragment> statefulFragments = e.getValue();
+            StatefulFragment maxFragment = statefulFragments.stream().max(Comparator.comparingInt(f -> f.offset)).get();
+            int bufferSize = maxFragment.offset + maxFragment.buffer.size();
+            ByteBuffer mergedBuffer = statefulFragments.stream().flatMap(f -> f.buffer.stream()).collect(
+                    () -> ByteBuffer.allocate(bufferSize),
+                    ByteBuffer::put, ByteBuffer::put);
+            mergedBuffer.rewind();
+
             return new Frame(id, mergedBuffer);
         }).collect(Collectors.toList());
     }

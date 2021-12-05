@@ -1,15 +1,15 @@
 package com.lu3in033.projet.parser;
 
-import java.util.List;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 public class Frame {
     public final int id;
-    public final List<Byte> buffer;
+    public final ByteBuffer buffer;
 
-    public Frame(int id, List<Byte> buf) {
+    public Frame(int id, ByteBuffer buf) {
         this.id = id;
         buffer = buf;
     }
@@ -18,7 +18,7 @@ public class Frame {
     public String toString() {
         return new StringJoiner("\n\t", Frame.class.getSimpleName() + " {\n\t", "\n}")
                 .add(String.format("Frame ID: 0x%02x", id))
-                .add("Buffer: " + buffer.stream().map(b -> String.format("0x%02x", b)).collect(Collectors.toList()))
+                .add("Buffer: " + Arrays.toString(buffer.array()))
                 .toString();
     }
 

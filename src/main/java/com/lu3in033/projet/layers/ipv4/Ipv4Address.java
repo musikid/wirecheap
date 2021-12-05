@@ -2,23 +2,23 @@ package com.lu3in033.projet.layers.ipv4;
 
 import com.lu3in033.projet.layers.NotEnoughBytesException;
 
-import java.util.List;
+import java.nio.ByteBuffer;
 
 public class Ipv4Address {
-    public final Byte[] address;
+    public final byte[] address;
 
-    public Ipv4Address(Byte[] a) {
+    public Ipv4Address(byte[] a) {
         assert (a.length == 4);
         address = a;
     }
 
-    public static Ipv4Address create(List<Byte> bytes) throws NotEnoughBytesException {
-        if (bytes.size() < 4) {
-            throw new NotEnoughBytesException(4, bytes.size());
+    public static Ipv4Address create(ByteBuffer bytes) throws NotEnoughBytesException {
+        if (bytes.remaining() < 4) {
+            throw new NotEnoughBytesException(4, bytes.remaining());
         }
 
-        Byte[] b = new Byte[4];
-        bytes.toArray(b);
+        byte[] b = new byte[4];
+        bytes.get(b);
 
         return new Ipv4Address(b);
     }

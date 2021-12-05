@@ -32,14 +32,14 @@ public class Main {
                 return;
             }
 
-            Ipv4 ip = Ipv4.create(frame.buffer.subList(Ethernet.HEADER_LENGTH, frame.buffer.size()));
+            Ipv4 ip = Ipv4.create(frame.buffer);
             System.out.println(ip);
             if (!Objects.equals(ip.nextHeaderProtocol.name(), NextHeaderProtocols.UDP.name())) {
                 System.out.println("Payload: " + ip.payload());
                 return;
             }
 
-            Udp udp = Udp.create(frame.buffer.subList(Ethernet.HEADER_LENGTH + ip.headerLength(), frame.buffer.size()));
+            Udp udp = Udp.create(frame.buffer);
             System.out.println(udp);
         } catch (Exception e) {
             e.printStackTrace();

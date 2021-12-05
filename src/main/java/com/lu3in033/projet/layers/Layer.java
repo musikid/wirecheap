@@ -1,15 +1,15 @@
 package com.lu3in033.projet.layers;
 
-import java.util.List;
+import java.nio.ByteBuffer;
 
 public abstract class Layer {
-    private final List<Byte> payload;
+    private final ByteBuffer payload;
 
-    protected Layer(List<Byte> payload) {
+    protected Layer(ByteBuffer payload) {
         this.payload = payload;
     }
 
-    public List<Byte> payload() {
+    public ByteBuffer payload() {
         return payload;
     }
 }

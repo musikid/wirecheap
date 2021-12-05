@@ -2,26 +2,26 @@ package com.lu3in033.projet.layers.ethernet;
 
 import com.lu3in033.projet.layers.NotEnoughBytesException;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.List;
 import java.util.StringJoiner;
 
 public class MacAddress {
-    public final Byte[] buffer;
+    public final byte[] buffer;
 
-    public MacAddress(Byte[] buf) {
+    public MacAddress(byte[] buf) {
         assert (buf != null);
         assert (buf.length == 6);
         buffer = buf;
     }
 
-    public static MacAddress create(List<Byte> b) throws NotEnoughBytesException {
-        if (b.size() < 6) {
-            throw new NotEnoughBytesException(6, b.size());
+    public static MacAddress create(ByteBuffer b) throws NotEnoughBytesException {
+        if (b.capacity() < 6) {
+            throw new NotEnoughBytesException(6, b.capacity());
         }
 
-        Byte[] buf = new Byte[6];
-        b.toArray(buf);
+        var buf = new byte[6];
+        b.get(buf);
 
         return new MacAddress(buf);
     }

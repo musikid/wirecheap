@@ -1,10 +1,9 @@
 package com.lu3in033.projet.layers.udp;
 
 import com.lu3in033.projet.layers.Layer;
-import com.lu3in033.projet.layers.LayerUtils;
 import com.lu3in033.projet.layers.NotEnoughBytesException;
 
-import java.util.List;
+import java.nio.ByteBuffer;
 import java.util.StringJoiner;
 
 public class Udp extends Layer {
@@ -14,7 +13,7 @@ public class Udp extends Layer {
     public short length;
     public short checksum;
 
-    public Udp(short destPort, short srcPort, short length, short checksum, List<Byte> payload) {
+    public Udp(short destPort, short srcPort, short length, short checksum, ByteBuffer payload) {
         super(payload);
         this.destPort = destPort;
         this.srcPort = srcPort;
@@ -22,16 +21,16 @@ public class Udp extends Layer {
         this.checksum = checksum;
     }
 
-    public static Udp create(List<Byte> bytes) throws NotEnoughBytesException {
-        if (bytes.size() < HEADER_LENGTH) {
-            throw new NotEnoughBytesException(HEADER_LENGTH, bytes.size());
+    public static Udp create(ByteBuffer bytes) throws NotEnoughBytesException {
+        if (bytes.remaining() < HEADER_LENGTH) {
+            throw new NotEnoughBytesException(HEADER_LENGTH, bytes.remaining());
         }
 
-        short destPort = LayerUtils.getShort(bytes, 0);
-        short srcPort = LayerUtils.getShort(bytes, 2);
-        short length = LayerUtils.getShort(bytes, 4);
-        short checksum = LayerUtils.getShort(bytes, 6);
-        List<Byte> payload = bytes.subList(8, bytes.size());
+        short destPort = bytes.getShort();
+        short srcPort = bytes.getShort();
+        short length = bytes.getShort();
+        short checksum = bytes.getShort();
+        ByteBuffer payload = bytes.slice();
 
         return new Udp(destPort, srcPort, length, checksum, payload);
     }
