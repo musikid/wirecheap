@@ -37,7 +37,7 @@ public enum DhcpOptions {
     //TODO: Message type
     MessageType(53, "DHCP Message Type", b -> {
         int typeValue = b.get();
-        Optional<DhcpMessageTypes> type = DhcpMessageTypes.typeFor(typeValue);
+        Optional<DhcpMessageTypes> type = DhcpMessageTypes.get(typeValue);
         String name = type.map(DhcpMessageTypes::name).orElse("Unknown");
         return String.format("%d (%s)", typeValue, name);
     }),

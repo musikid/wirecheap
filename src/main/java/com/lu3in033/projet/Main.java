@@ -24,26 +24,28 @@ public class Main {
         Parser parser = new Parser();
         try {
             List<Frame> frames = parser.parse(Files.readString(p));
-            Frame frame = frames.get(0);
-            Ethernet eth = Ethernet.create(frame.buffer);
-            System.out.println(eth);
-            if (eth.type.value() != EtherTypes.IPv4.value()) {
-                System.out.println("Payload: " + eth.payload());
-                return;
-            }
+            for (Frame frame : frames) {
+                System.out.printf("Frame #%d%n%n", frame.id);
+                Ethernet eth = Ethernet.create(frame.buffer);
+                System.out.println(eth);
+                if (eth.type.value() != EtherTypes.IPv4.value()) {
+                    System.out.println("Payload: " + eth.payload());
+                    return;
+                }
 
-            Ipv4 ip = Ipv4.create(frame.buffer);
-            System.out.println(ip);
-            if (ip.nextHeaderProtocol.value != NextHeaderProtocols.UDP.value()) {
-                System.out.println("Payload: " + ip.payload());
-                return;
-            }
+                Ipv4 ip = Ipv4.create(frame.buffer);
+                System.out.println(ip);
+                if (ip.nextHeaderProtocol.value != NextHeaderProtocols.UDP.value()) {
+                    System.out.println("Payload: " + ip.payload());
+                    return;
+                }
 
-            Udp udp = Udp.create(frame.buffer);
-            System.out.println(udp);
-            if (udp.destPort == 67 || udp.destPort == 68) {
-                Dhcp dhcp = Dhcp.create(frame.buffer);
-                System.out.println(dhcp);
+                Udp udp = Udp.create(frame.buffer);
+                System.out.println(udp);
+                if (udp.destPort == 67 || udp.destPort == 68) {
+                    Dhcp dhcp = Dhcp.create(frame.buffer);
+                    System.out.println(dhcp);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -106,9 +106,15 @@ public class Dhcp {
 
     @Override
     public String toString() {
-        String chaddrString = (htype.rawValue == HardwareType.HardwareTypes.Ethernet.value
-                ? new MacAddress(ByteBuffer.wrap(chaddr).slice(0, 6).array()).toString()
-                : Arrays.toString(chaddr));
+        String chaddrString;
+        try {
+            chaddrString = (htype.rawValue == HardwareType.HardwareTypes.Ethernet.value)
+                    ? MacAddress.create(ByteBuffer.wrap(chaddr).slice(0, 6)).toString()
+                    : Arrays.toString(chaddr);
+        } catch (NotEnoughBytesException e) {
+            e.printStackTrace();
+            return null;
+        }
         String optionsStr = options.stream().map(DhcpOption::toString).collect(Collectors.joining("\n   -> "));
 
         return new StringJoiner("\n -> ", "DHCP\n -> ", "\n")
@@ -116,7 +122,7 @@ public class Dhcp {
                 .add("Hardware type: " + htype)
                 .add("Hardware address length: " + hlen)
                 .add("Hops: " + hops)
-                .add("Transaction ID: " + xid)
+                .add(String.format("Transaction ID: 0x%08x", xid))
                 .add("Seconds elapsed: " + secs)
                 .add("Flags: " + flags)
                 .add("Client IP address: " + ciaddr)

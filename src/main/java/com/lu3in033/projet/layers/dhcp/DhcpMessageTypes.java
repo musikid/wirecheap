@@ -24,7 +24,7 @@ public enum DhcpMessageTypes {
         value = v;
     }
 
-    public static Optional<DhcpMessageTypes> typeFor(int v) {
+    public static Optional<DhcpMessageTypes> get(int v) {
         return Optional.ofNullable(VALUES.get(v));
     }
 }
