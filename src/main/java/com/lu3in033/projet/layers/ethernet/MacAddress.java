@@ -11,16 +11,16 @@ public class MacAddress {
 
     public MacAddress(byte[] buf) {
         assert (buf != null);
-        assert (buf.length == 6);
+        assert buf.length == 6;
         buffer = buf;
     }
 
     public static MacAddress create(ByteBuffer b) throws NotEnoughBytesException {
-        if (b.capacity() < 6) {
-            throw new NotEnoughBytesException(6, b.capacity());
+        if (b.remaining() < 6) {
+            throw new NotEnoughBytesException(6, b.remaining());
         }
 
-        var buf = new byte[6];
+        byte[] buf = new byte[6];
         b.get(buf);
 
         return new MacAddress(buf);

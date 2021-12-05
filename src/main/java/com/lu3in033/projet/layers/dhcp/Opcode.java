@@ -19,8 +19,8 @@ public class Opcode {
     }
 
     enum Opcodes {
-        Request(0),
-        Reply(1);
+        Request(1),
+        Reply(2);
 
         public static final Map<Integer, Opcodes> VALUES = Arrays.stream(Opcodes.values())
                 .collect(Collectors.toUnmodifiableMap(o -> o.value, o -> o));
