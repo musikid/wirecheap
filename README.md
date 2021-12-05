@@ -23,7 +23,7 @@ java -jar target/Wirecheap*.jar
 
 ### src/main/java/com/lu3in033/projet
 
-This is the root of the project is located. The `Main` class is defined here.
+This is where the root of the project is located. The `Main` class is defined here.
 
 ### src/main/java/com/lu3in033/projet/layers
 
