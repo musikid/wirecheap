@@ -7,15 +7,17 @@ import java.util.stream.Collectors;
 
 public class Opcode {
     private final int rawValue;
+    private final String name;
 
     public Opcode(byte v) {
         rawValue = v;
+        name = Optional.ofNullable(Opcodes.VALUES.get(rawValue))
+                .map(Opcodes::name).orElse("Unknown");
     }
 
     @Override
     public String toString() {
-        return Optional.ofNullable(Opcodes.VALUES.get(rawValue))
-                .map(Opcodes::name).orElse("Unknown");
+        return String.format("0x%02x (%s)", rawValue, name);
     }
 
     enum Opcodes {
