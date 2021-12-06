@@ -6,12 +6,12 @@ import java.util.StringJoiner;
 
 public class DhcpOption {
     public final int type;
-    public final byte length;
+    public final int length;
     public final ByteBuffer data;
     public final String name;
     public final DhcpOptionFormatter formatter;
 
-    public DhcpOption(int type, byte length, ByteBuffer data) {
+    public DhcpOption(int type, int length, ByteBuffer data) {
         this.type = type;
         this.length = length;
         this.data = data;
@@ -29,7 +29,7 @@ public class DhcpOption {
     @Override
     public String toString() {
         String s = new StringJoiner("\n      -> ", "Option\n      -> ", "")
-                .add(String.format("Type: 0x%02x (%s)", type, name))
+                .add(String.format("Type: %d (%s)", type, name))
                 .add("Length: " + length)
                 .add("Data: " + formatter.apply(data))
                 .toString();

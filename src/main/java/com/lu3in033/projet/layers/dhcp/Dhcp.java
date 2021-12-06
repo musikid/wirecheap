@@ -13,7 +13,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class Dhcp {
-    public static final int MIN_PACKET_LENGTH = 288;
+    public static final int MIN_PACKET_LENGTH = 236;
 
     public final Opcode op;
     public final HardwareType htype;
@@ -84,11 +84,11 @@ public class Dhcp {
 
         // Options magic happens here
         List<DhcpOption> options = new ArrayList<>();
-        int type = bytes.get();
-        do {
+        for (int type = bytes.get(); (type & 0xFF) != DhcpOptions.EndOfOptions.value;
+             type = bytes.get()) {
             DhcpOption option;
             if (DhcpOptions.FIXED_LENGTH.contains(type)) {
-                option = new DhcpOption(type, (byte) 1, ByteBuffer.allocate(0));
+                option = new DhcpOption(type, 1, ByteBuffer.allocate(0));
             } else {
                 byte length = (byte) (bytes.get() & 0xFF);
                 ByteBuffer data = ByteBuffer.allocate(length);
@@ -97,8 +97,7 @@ public class Dhcp {
             }
 
             options.add(option);
-            type = bytes.get();
-        } while ((type & 0xFF) != DhcpOptions.EndOfOptions.value);
+        }
 
         return new Dhcp(op, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr,
                 giaddr, chaddr, sname, file, options);
