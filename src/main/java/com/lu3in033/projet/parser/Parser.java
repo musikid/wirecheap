@@ -122,8 +122,7 @@ public class Parser {
             int bufferSize = maxFragment.offset + maxFragment.buffer.size();
             ByteBuffer mergedBuffer = statefulFragments.stream().flatMap(f -> f.buffer.stream()).collect(
                     () -> ByteBuffer.allocate(bufferSize),
-                    ByteBuffer::put, ByteBuffer::put);
-            mergedBuffer.rewind();
+                    ByteBuffer::put, ByteBuffer::put).rewind();
 
             return new Frame(id, mergedBuffer);
         }).collect(Collectors.toList());

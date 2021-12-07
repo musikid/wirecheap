@@ -34,12 +34,10 @@ public class DhcpOption {
 
     @Override
     public String toString() {
-        String s = new StringJoiner("\n      -> ", "Option\n      -> ", "")
+        return new StringJoiner("\n      -> ", "Option\n      -> ", "")
                 .add(String.format("Type: %d (%s)", type, name))
                 .add("Length: " + length)
-                .add("Data: " + formatter.apply(data))
+                .add("Data: " + formatter.apply(data.rewind()))
                 .toString();
-        data.rewind();
-        return s;
     }
 }
