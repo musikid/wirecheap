@@ -47,18 +47,18 @@ public class RRsData {
 			int serial, int refresh, int retry, int expire) {
 		
 		this.domain 	= domain;
-		this.type 		= type;
+		this.type 	= type;
 		this.classe 	= classe;
-		this.ip 		=ip;
+		this.ip 	=ip;
 		this.preference = preference;
 		this.exchange 	= exchange;
 		this.nsdName 	= nsdName;
 		this.ptrName 	= ptrName;
-		this.mName 		= mName;
-		this.rName 		= rName;
+		this.mName 	= mName;
+		this.rName 	= rName;
 		this.serial 	= serial; 
 		this.refresh 	= refresh;
-		this.retry 		= retry;
+		this.retry 	= retry;
 		this.expire 	= expire;
 		
 	}
