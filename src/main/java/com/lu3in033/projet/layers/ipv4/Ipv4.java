@@ -78,7 +78,9 @@ public class Ipv4 extends Layer {
 
     @Override
     public String toString() {
-        return new StringJoiner("\n -> ", Ipv4.class.getSimpleName() + "\n -> ", "\n")
+        String optionsStr = options.stream().map(Ipv4Option::toString).collect(Collectors.joining("\n   -> "));
+
+        return new StringJoiner("\n -> ", "IPv4\n -> ", "\n")
                 .add("Version: " + version)
                 .add("Header length: " + headerLength)
                 .add("Type of service: " + typeOfService)

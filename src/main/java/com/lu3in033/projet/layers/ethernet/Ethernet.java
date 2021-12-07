@@ -35,7 +35,7 @@ public class Ethernet extends Layer {
 
     @Override
     public String toString() {
-        return new StringJoiner("\n -> ", Ethernet.class.getSimpleName() + "\n -> ", "\n")
+        return new StringJoiner("\n -> ", "Ethernet\n -> ", "\n")
                 .add("Source: " + src)
                 .add("Destination: " + dest)
                 .add(String.format("Type: 0x%04x (%s)", type.value(), type.name()))
