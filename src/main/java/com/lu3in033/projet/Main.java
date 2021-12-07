@@ -30,14 +30,14 @@ public class Main {
                 System.out.println(eth);
                 if (eth.type.value() != EtherTypes.IPv4.value()) {
                     System.out.println("Payload: " + eth.payload());
-                    return;
+                    continue;
                 }
 
                 Ipv4 ip = Ipv4.create(frame.buffer);
                 System.out.println(ip);
                 if (ip.nextHeaderProtocol.value != NextHeaderProtocols.UDP.value()) {
                     System.out.println("Payload: " + ip.payload());
-                    return;
+                    continue;
                 }
 
                 Udp udp = Udp.create(frame.buffer);
@@ -45,6 +45,8 @@ public class Main {
                 if (udp.destPort == 67 || udp.destPort == 68) {
                     Dhcp dhcp = Dhcp.create(frame.buffer);
                     System.out.println(dhcp);
+                } else {
+                    System.out.println("Payload: " + udp.payload());
                 }
             }
         } catch (Exception e) {
