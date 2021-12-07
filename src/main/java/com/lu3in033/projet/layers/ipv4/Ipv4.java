@@ -61,7 +61,7 @@ public class Ipv4 extends Layer {
 
         byte flagsFragByte = bytes.get();
         Ipv4Flags flags = new Ipv4Flags((byte) (flagsFragByte >> 5));
-        short fragmentOffset = (short) ((flagsFragByte & 0b00011111) << 8 | bytes.get());
+        short fragmentOffset = (short) ((flagsFragByte & 0x1F) << 8 | bytes.get());
 
         byte ttl = bytes.get();
 
@@ -71,10 +71,28 @@ public class Ipv4 extends Layer {
         Ipv4Address source = Ipv4Address.create(bytes);
         Ipv4Address dest = Ipv4Address.create(bytes);
 
-        //TODO: We don't parse options for now
+        List<Ipv4Option> options = new ArrayList<>();
+        // If we have options
+        if (headerLength * 4 > MIN_HEADER_LENGTH) {
+            for (int type = bytes.get(); type != Ipv4Options.EOOL.type;
+                 type = bytes.get()) {
+                Ipv4Option option;
+                if (Ipv4Options.isFixed(type)) {
+                    option = new Ipv4Option(type, 1, ByteBuffer.allocateDirect(0));
+                } else {
+                    int length = bytes.get();
+                    ByteBuffer data = ByteBuffer.allocate(length);
+                    bytes.get(data.array());
+                    option = new Ipv4Option(type, length, data);
+                }
+
+                options.add(option);
+            }
+        }
+
         return new Ipv4(version, headerLength, typeOfService, totalLength,
                 id, flags, fragmentOffset, ttl, protocol, checksum, source, dest,
-                new ArrayList<>(), bytes.slice());
+                options, bytes.slice());
     }
 
     @Override
@@ -83,10 +101,10 @@ public class Ipv4 extends Layer {
 
         return new StringJoiner("\n -> ", "IPv4\n -> ", "\n")
                 .add("Version: " + version)
-                .add("Header length: " + headerLength)
+                .add(String.format("Header length: %d (%d bytes)", headerLength, headerLength * 4))
                 .add("Type of service: " + typeOfService)
-                .add("Total length: " + Short.toUnsignedInt(totalLength))
-                .add("Id: " + String.format("0x%04x", Short.toUnsignedInt(id)))
+                .add(String.format("Total length: %d bytes", Short.toUnsignedInt(totalLength)))
+                .add("ID: " + String.format("0x%04x", Short.toUnsignedInt(id)))
                 .add("Flags: " + "\n    " + flags.toString().replaceAll("\n", "\n    "))
                 .add("Fragment offset: " + fragmentOffset)
                 .add("TTL: " + Byte.toUnsignedInt(ttl))
@@ -94,7 +112,7 @@ public class Ipv4 extends Layer {
                 .add("Checksum: " + String.format("0x%04x", Short.toUnsignedInt(checksum)))
                 .add("Source: " + source)
                 .add("Destination: " + dest)
-                .add("Options: " + options)
+                .add("Options: " + optionsStr)
                 .toString();
     }
 }
