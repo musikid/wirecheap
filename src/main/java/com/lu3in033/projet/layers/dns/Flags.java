@@ -34,15 +34,15 @@ public class Flags {
 			throw NotEnoughBytesException(HEADER_LENTH , bytes.size());
 		} 
 		this.qr		= bytes.get(0) & 0x80;
-		this.opcode 	= bytes.get(0) & 0x78;
+		this.opcode = bytes.get(0) & 0x78;
 		this.aa 	= bytes.get(0) & 0x04;
 		this.tc 	= bytes.get(0) & 0x02;
 		this.rd 	= bytes.get(0) & 0x01;
-		this.ra 	= bytes.get(1) & 0x80;
-		this.z  	= bytes.get(1) & 0x40;
-		this.asa 	= bytes.get(1) & 0x20;
-		this.nad 	= bytes.get(1) & 0x10;
-		this.rcode 	= bytes.get(1) & 0x0F;	
+		this.ra 	= bytes.get(0) & 0x80;
+		this.z  	= bytes.get(0) & 0x40;
+		this.asa 	= bytes.get(0) & 0x20;
+		this.nad 	= bytes.get(0) & 0x10;
+		this.rcode 	= bytes.get(0) & 0x0F;	
 		
 		return new Flags(qr,opcode,aa,tc,rd,ra,z,asa,nad,rcode);
 	}
@@ -233,12 +233,12 @@ public class Flags {
 	
 	public String toString() {
 		return new StringJoiner(delmiter, prefix , sufix)
-				.add("Response  : " + this.reponse(qr))
-				.add("Opcode 	: " + this.opcode(opcode))
+				.add("Response : " + this.reponse(qr))
+				.add("Opcode : " + this.opcode(opcode))
 				.add("Authoritative Answer : " +this.authoritativeAnswer(aa))
 				.add("Truncated : " + this.truncated(tr))
-				.add("Recursion desired    :" + this.recursionDesired(rd))
-				.add("Recursion available  : " +this.recursionAvailable(ra))
+				.add("Recursion desired :" + this.recursionDesired(rd))
+				.add("Recursion available : " +this.recursionAvailable(ra))
 				.add("Z : " + this.z(z))
 				.add("Answer authenticated : " + this.answerAuthentificated(asa))
 				.add("Non-authenticated data : " + this.nonAuthentificatedData(nad))
