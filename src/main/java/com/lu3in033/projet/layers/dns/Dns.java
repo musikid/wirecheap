@@ -59,7 +59,7 @@ public class Dns extends Layer{
 		 short authorityRRs  = LayerUtils.getShort(bytes, 8);
 		 short additionalRRs = LayerUtils.getShort(bytes, 10);
 		 
-		 //Corps 
+		 //Corp
 		 //QuestSection questionSection 	= QuestSection.create(bystes.sublist(10, bytes.size()-1));	 
 		 //AnSection answerSection 		= AnSection.create();
 		 //AuthSection authoritySection  	= AuthSection.create();
