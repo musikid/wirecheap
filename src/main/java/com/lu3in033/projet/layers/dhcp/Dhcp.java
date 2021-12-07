@@ -6,10 +6,7 @@ import com.lu3in033.projet.layers.ipv4.Ipv4Address;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Dhcp {
@@ -57,9 +54,11 @@ public class Dhcp {
         }
 
         Opcode op = new Opcode(bytes.get());
+
         HardwareType htype = new HardwareType(bytes.get());
         byte hlen = bytes.get();
         byte hops = bytes.get();
+
         int xid = bytes.getInt();
         short secs = bytes.getShort();
         DhcpFlags flags = new DhcpFlags(bytes.getShort());
@@ -72,22 +71,21 @@ public class Dhcp {
         byte[] chaddr = new byte[16];
         bytes.get(chaddr);
 
-        byte[] rawSname = new byte[64];
-        bytes.get(rawSname);
-        String sname = StandardCharsets.US_ASCII.decode(ByteBuffer.wrap(rawSname)).toString();
+        ByteBuffer rawSname = ByteBuffer.allocate(64);
+        bytes.get(rawSname.array());
 
-        byte[] rawFile = new byte[128];
-        bytes.get(rawFile);
-        String file = StandardCharsets.US_ASCII.decode(ByteBuffer.wrap(rawFile)).toString();
+        ByteBuffer rawFile = ByteBuffer.allocate(128);
+        bytes.get(rawFile.array());
 
         int magicCookie = bytes.getInt();
 
         // Options magic happens here
         List<DhcpOption> options = new ArrayList<>();
-        for (int type = bytes.get(); (type & 0xFF) != DhcpOptions.EndOfOptions.value;
+        for (int type = bytes.get(); (type & 0xFF) != DhcpOptions.EndOfOptions.value
+                && bytes.hasRemaining();
              type = bytes.get()) {
             DhcpOption option;
-            if (DhcpOptions.FIXED_LENGTH.contains(type)) {
+            if (DhcpOptions.isFixed(type)) {
                 option = new DhcpOption(type, 1, ByteBuffer.allocate(0));
             } else {
                 byte length = (byte) (bytes.get() & 0xFF);
@@ -99,8 +97,51 @@ public class Dhcp {
             options.add(option);
         }
 
+        // We check if we also have options on sname and file
+        Optional<DhcpOption> optionOverload = options.stream()
+                .filter(opt -> opt.type == DhcpOptions.OptionOverload.value).findFirst();
+        if (optionOverload.isPresent()) {
+            byte value = optionOverload.get().data.get();
+            if ((value & DhcpOptionOverload.OverloadSname.value) > 0) {
+                loadOverloadedOptions(options, rawSname);
+            }
+
+            if ((value & DhcpOptionOverload.OverloadFile.value) > 0) {
+                loadOverloadedOptions(options, rawFile);
+            }
+
+            return new Dhcp(op, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr,
+                    giaddr, chaddr, "", "", options);
+        }
+
+        // We use trim() to delete all null characters
+        String sname = StandardCharsets.US_ASCII.decode(rawSname).toString().trim();
+        // We use trim() to delete all null characters
+        String file = StandardCharsets.US_ASCII.decode(rawFile).toString().trim();
+
         return new Dhcp(op, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr,
                 giaddr, chaddr, sname, file, options);
+    }
+
+    private static DhcpOption getOption(int type, ByteBuffer bytes) {
+        DhcpOption option;
+        if (DhcpOptions.isFixed(type)) {
+            option = new DhcpOption(type, 1, ByteBuffer.allocate(0));
+        } else {
+            byte length = (byte) (bytes.get() & 0xFF);
+            ByteBuffer data = ByteBuffer.allocate(length);
+            bytes.get(data.array());
+            option = new DhcpOption(type, length, data);
+        }
+
+        return option;
+    }
+
+    private static void loadOverloadedOptions(List<DhcpOption> options, ByteBuffer bytes) {
+        while (bytes.hasRemaining()) {
+            int type = bytes.get();
+            options.add(getOption(type, bytes));
+        }
     }
 
     @Override
@@ -108,7 +149,7 @@ public class Dhcp {
         String chaddrString;
         try {
             chaddrString = (htype.rawValue == HardwareType.HardwareTypes.Ethernet.value)
-                    ? MacAddress.create(ByteBuffer.wrap(chaddr).slice(0, 6)).toString()
+                    ? MacAddress.create(ByteBuffer.wrap(chaddr).slice(1, 6)).toString()
                     : Arrays.toString(chaddr);
         } catch (NotEnoughBytesException e) {
             e.printStackTrace();
@@ -120,9 +161,9 @@ public class Dhcp {
                 .add("Message type: " + op)
                 .add("Hardware type: " + htype)
                 .add("Hardware address length: " + hlen)
-                .add("Hops: " + hops)
-                .add(String.format("Transaction ID: 0x%08x", xid))
-                .add("Seconds elapsed: " + secs)
+                .add("Hops: " + Byte.toUnsignedInt(hops))
+                .add("Transaction ID: " + Integer.toUnsignedString(xid))
+                .add("Seconds elapsed: " + Integer.toUnsignedString(secs))
                 .add("Flags: " + flags)
                 .add("Client IP address: " + ciaddr)
                 .add("Your IP address: " + yiaddr)

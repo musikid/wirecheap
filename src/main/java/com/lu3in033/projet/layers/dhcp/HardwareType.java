@@ -11,7 +11,7 @@ public class HardwareType {
 
     public HardwareType(byte v) {
         rawValue = v;
-        name = Optional.ofNullable(HardwareTypes.VALUES.get(rawValue))
+        name = HardwareTypes.get(v)
                 .map(HardwareTypes::name).orElse("Unknown");
     }
 
@@ -32,6 +32,8 @@ public class HardwareType {
             value = v;
         }
 
-
+        public static Optional<HardwareTypes> get(int v) {
+            return Optional.ofNullable(HardwareTypes.VALUES.get(v));
+        }
     }
 }

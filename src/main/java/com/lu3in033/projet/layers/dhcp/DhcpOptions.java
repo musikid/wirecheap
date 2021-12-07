@@ -6,6 +6,10 @@ import com.lu3in033.projet.layers.ethernet.MacAddress;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Defined DHCP options.
+ * We define the option code, pretty name and a String formatter.
+ */
 public enum DhcpOptions {
     Pad(0, "Padding", DhcpOptionFormatter.EMPTY),
     SubnetMask(1, "Subnet Mask", DhcpOptionFormatter.IP),
@@ -34,7 +38,6 @@ public enum DhcpOptions {
     //TODO: Option overload
     OptionOverload(52, "Option Overload",
             byteBuffer -> Integer.toUnsignedString(byteBuffer.get() & 0xFF)),
-    //TODO: Message type
     MessageType(53, "DHCP Message Type", b -> {
         int typeValue = b.get();
         Optional<DhcpMessageTypes> type = DhcpMessageTypes.get(typeValue);
@@ -74,10 +77,13 @@ public enum DhcpOptions {
         }
     }),
     TFTPName(66, "TFTP server name", DhcpOptionFormatter.ASCII),
-    BootFileName(67, "Bootfile name", DhcpOptionFormatter.ASCII),
+    BootFileName(67, "Boot file name", DhcpOptionFormatter.ASCII),
     EndOfOptions(255, "End Of Options", DhcpOptionFormatter.EMPTY);
 
-    public final static Set<Integer> FIXED_LENGTH = Set.of(DhcpOptions.Pad.value, DhcpOptions.EndOfOptions.value);
+    // We put here options which have a fixed length
+    // (it's assumed to be one because there isn't any other length in the RFC).
+    private final static Set<Integer> FIXED_LENGTH = Set.of(DhcpOptions.Pad.value, DhcpOptions.EndOfOptions.value);
+
     public final static Map<Integer, DhcpOptions> VALUES = Arrays.stream(DhcpOptions.values())
             .collect(Collectors.toUnmodifiableMap(t -> t.value, t -> t));
 
@@ -94,6 +100,10 @@ public enum DhcpOptions {
     private static String prettyNameFor(int code) {
         return get(code).map(v -> v.prettyName)
                 .orElse("Unknown");
+    }
+
+    public static boolean isFixed(int t) {
+        return FIXED_LENGTH.contains(t);
     }
 
     public static Optional<DhcpOptions> get(int code) {

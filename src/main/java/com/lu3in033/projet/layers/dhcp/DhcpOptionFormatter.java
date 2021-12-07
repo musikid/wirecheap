@@ -9,7 +9,8 @@ import java.util.StringJoiner;
 import java.util.function.Function;
 
 interface DhcpOptionFormatter extends Function<ByteBuffer, String> {
-    DhcpOptionFormatter ASCII = byteBuffer -> StandardCharsets.US_ASCII.decode(byteBuffer).toString();
+    // We use trim() to delete all null characters
+    DhcpOptionFormatter ASCII = byteBuffer -> StandardCharsets.US_ASCII.decode(byteBuffer).toString().trim();
     DhcpOptionFormatter EMPTY = byteBuffer -> "";
     DhcpOptionFormatter UNSIGNED_INTEGER = byteBuffer -> Integer.toUnsignedString(byteBuffer.getInt());
     DhcpOptionFormatter UNSIGNED_SHORT = byteBuffer -> Integer.toUnsignedString(byteBuffer.getShort());

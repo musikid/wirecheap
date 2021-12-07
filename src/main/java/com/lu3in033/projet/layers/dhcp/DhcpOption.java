@@ -4,6 +4,12 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.StringJoiner;
 
+/**
+ * An instance of DHCP option.
+ * The bytes are interpreted when needed (with toString() for example).
+ */
+// Because enum can't have runtime data in Java,
+// we only take the bytes and interpret them when needed (with toString() for example)
 public class DhcpOption {
     public final int type;
     public final int length;
@@ -17,7 +23,7 @@ public class DhcpOption {
         this.data = data;
         Optional<DhcpOptions> optType;
         if ((optType = DhcpOptions.get(type)).isPresent()) {
-            var opt = optType.get();
+            DhcpOptions opt = optType.get();
             name = opt.prettyName;
             formatter = opt.formatter;
         } else {
