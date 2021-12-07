@@ -4,6 +4,7 @@ import com.lu3in033.projet.layers.Layer;
 import com.lu3in033.projet.layers.NotEnoughBytesException;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import java.util.StringJoiner;
 
 public class Ethernet extends Layer {
@@ -40,5 +41,18 @@ public class Ethernet extends Layer {
                 .add("Destination: " + dest)
                 .add(String.format("Type: 0x%04x (%s)", type.value(), type.name()))
                 .toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Ethernet ethernet = (Ethernet) o;
+        return dest.equals(ethernet.dest) && src.equals(ethernet.src) && type.equals(ethernet.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(dest, src, type);
     }
 }

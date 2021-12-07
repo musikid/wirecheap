@@ -17,4 +17,19 @@ public class EtherType {
         return Arrays.stream(EtherTypes.values()).filter(v -> v.value() == type)
                 .findFirst().map(EtherTypes::name).orElse("Unknown");
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        EtherType etherType = (EtherType) o;
+
+        return type == etherType.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return type;
+    }
 }
