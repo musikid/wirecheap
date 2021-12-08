@@ -16,6 +16,6 @@ public class NextHeaderProtocol {
 
     @Override
     public String toString() {
-        return String.format("0x%02x (%s)", value, name());
+        return String.format("%d (%s)", Byte.toUnsignedInt(value), name());
     }
 }
