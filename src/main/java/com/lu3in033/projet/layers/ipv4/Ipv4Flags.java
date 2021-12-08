@@ -19,7 +19,9 @@ public class Ipv4Flags {
 
     @Override
     public String toString() {
-        return new StringJoiner(" \n").add("Unused: " + unused).add("Don't Fragment: " + dontFragment)
+        return new StringJoiner(" \n", "\n", "")
+                .add("Reserved: " + unused)
+                .add("Don't Fragment: " + dontFragment)
                 .add("More Fragments: " + moreFragments).toString();
     }
 }
