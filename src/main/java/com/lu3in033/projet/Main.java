@@ -1,6 +1,7 @@
 package com.lu3in033.projet;
 
 import com.lu3in033.projet.layers.dhcp.Dhcp;
+import com.lu3in033.projet.layers.dns.Dns;
 import com.lu3in033.projet.layers.ethernet.EtherTypes;
 import com.lu3in033.projet.layers.ethernet.Ethernet;
 import com.lu3in033.projet.layers.ipv4.Ipv4;
@@ -45,7 +46,11 @@ public class Main {
                 if (udp.destPort == 67 || udp.destPort == 68) {
                     Dhcp dhcp = Dhcp.create(frame.buffer);
                     System.out.println(dhcp);
-                } else {
+                } else if (udp.destPort == 53) {
+                    Dns dns = Dns.create(frame.buffer);
+                    System.out.println(dns);
+                }
+                else {
                     System.out.println("Payload: " + udp.payload());
                 }
             }
