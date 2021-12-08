@@ -1,15 +1,17 @@
 package com.lu3in033.projet.layers.dns;
 
+import com.lu3in033.projet.layers.NotEnoughBytesException;
+
+import java.nio.ByteBuffer;
 import java.util.*;
 //recupérer les données
 //analyser les données
 
-public class Dns extends Layer{
-	
+public class Dns {
 	 //entête 
 	 public static int HEADER_LENGHT = 12;
 	 public short identifier; // 0,1
-	 public Flags  flags;     // 2,3
+	 public Flags  flags ;     // 2,3
 	 public short questions;  // 4,5
 	 public short answerRRs;  // 6,7
 	 public short authorityRRs; // 8,9
@@ -17,20 +19,19 @@ public class Dns extends Layer{
 	 
 	 //MESSAGE UTILE DNS 
 	 //Question section 
-	 public QuestSection questionSection;
+	 public List<RRsData> questionSection;
 	 //Answer section 
-	 public AnSection answerSection;
+	 public List<RRsData> answerSection;
 	 //Authority section 
-	 public AuthSection authoritySection; 
+	 public List<RRsData> authoritySection;
 	 //Additional section 
-	 public AdSection additionalSection;
+	 public List<RRsData> additionalSection;
 	 
 	 
 	 //Constructeur 
 	 public Dns( short identifier, Flags flags, short questions, short answerRRs, short  authorityRRs, 
-			 short additionalRRs, QuestSection questionSection, AnSection answerSection, 
-			 AuthSection authoritySection, AdSection additionalSection, List<Byte> playload ) {
-		 super(playload);
+			 short additionalRRs, List<RRsData> questionSection, List<RRsData> answerSection,
+				 List<RRsData> authoritySection, List<RRsData> additionalSection ) {
 		 this.identifier = identifier;
 		 this.flags = flags;
 		 this.questions = questions;
@@ -46,36 +47,81 @@ public class Dns extends Layer{
 	 
 	 
 	 //Méthode 
-	 public static Dns create(List<Byte> bytes) throws NotEnoughBytesException {
-		 if (bytes.size() < HEADER_LENGTH) {
-	            throw new NotEnoughBytesException(HEADER_LENGTH, bytes.size());
+	 public static Dns create(ByteBuffer bytes) throws NotEnoughBytesException {
+		 if (bytes.remaining() < HEADER_LENGHT) {
+	            throw new NotEnoughBytesException(HEADER_LENGHT, bytes.remaining());
 	        }
 		 //recupérer tous les attributs 
 		 //entête
-		 short identifier 	 = LayerUtils.getShort(bytes, 0);
-		 Flags flags 		 = Flags.create(bystes.sublist(2,3));
-		 short questions	 = LayerUtils.getShort(bytes, 4);
-		 short answerRRs 	 = LayerUtils.getShort(bytes, 6);
-		 short authorityRRs  = LayerUtils.getShort(bytes, 8);
-		 short additionalRRs = LayerUtils.getShort(bytes, 10);
-		 
-		 //Corps 
-		 //QuestSection questionSection 	= QuestSection.create(bystes.sublist(10, bytes.size()-1));	 
-		 //AnSection answerSection 		= AnSection.create();
-		 //AuthSection authoritySection  	= AuthSection.create();
-		 //AdSection additionalSection 	= AdSection.create();
-		 
-		 //return Dns(identifier, flags, questions, answerRRs, authorityRRs, additionalRRs, 
-				 //questionSection, answerSection, authoritySection, additionalSection );
-		 
+		 short identifier 	 = bytes.getShort();
+		 ByteBuffer raw = ByteBuffer.allocate(2);
+		 bytes.get(raw.array());
+		 Flags flags 		  = Flags.create(raw);
+		 short questions	  = bytes.getShort();
+		 short answerRRs 	  = bytes.getShort();
+		 short authorityRRs   = bytes.getShort();
+		 short additionalRRs  = bytes.getShort();
+		 System.out.println(identifier);
+		 System.out.println(flags);
+		 System.out.println(questions);
+		 System.out.println(answerRRs);
+		 System.out.println(authorityRRs);
+		 System.out.println(additionalRRs);
+
+		 List<RRsData> questionSection = new ArrayList<RRsData>();
+		 boolean questionSectionBool = false;
+		 if (questions >= 1){questionSectionBool= true; }
+		 for (int i = 0; i<questions; i++){
+			 RRsData data = RRsData.create(bytes,true);
+			 questionSection.add(data);
+
+		 }
+
+		 List<RRsData>  answerSection = new ArrayList<RRsData>();
+		 for (int i = 0; i<answerRRs; i++){
+			 RRsData data = RRsData.create(bytes,false);
+			 answerSection.add(data);
+		 }
+
+		 List<RRsData>  authoritySection = new ArrayList<RRsData>();
+		 for (int i = 0; i<authorityRRs; i++){
+			 RRsData data = RRsData.create(bytes,false);
+			 authoritySection.add(data);
+		 }
+
+		 List<RRsData> additionalSection = new ArrayList<RRsData>();
+		 for (int i = 0; i<additionalRRs; i++){
+			 RRsData data = RRsData.create(bytes,false);
+			 additionalSection.add(data);
+		 }
+
+		 return  new Dns(identifier, flags, questions, answerRRs, authorityRRs, additionalRRs,
+				 questionSection, answerSection, authoritySection, additionalSection );
 	 }
-	 
-	 
-	 
+
+	 public String assemblerSection(List<RRsData> dataList){
+		 String assembler = "";
+		 for(RRsData tmp : dataList){
+			 assembler = assembler.concat(tmp.toString().replaceAll("\n", "\n    "));
+		 }
+		 return assembler;
+	 }
 	 // String
+	 String delimiter = " \n -> ";
+	 String prefix 	 = Dns.class.getSimpleName() + " :\n";
+	 String sufix	 = "\n";
 	 public String toString() {
-		 return;
+		 return new StringJoiner(delimiter, prefix, sufix)
+				 .add(" -> Identifier : " + identifier)
+				 .add( flags.toString().replaceAll("\n", "\n    "))
+				 .add("Question : " + questions)
+				 .add("AnswerRRs: " + answerRRs)
+				 .add("AuthorityRRs : " + authorityRRs +"\n")
+				 .add("Question Section : \n" + assemblerSection(questionSection))
+				 .add("Answer Section 	: \n" + assemblerSection(answerSection))
+				 .add("Authority Section : \n" + assemblerSection(authoritySection))
+				 .add("Additional Section :\n" + assemblerSection(additionalSection))
+				 .toString();
 	 }
-	 
 }
 

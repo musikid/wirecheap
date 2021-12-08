@@ -1,9 +1,14 @@
-import java.util.List;
+package com.lu3in033.projet.layers.dns;
+
+import com.lu3in033.projet.layers.NotEnoughBytesException;
+
+import java.nio.ByteBuffer;
+import java.util.StringJoiner;
 
 public class Flags {
-	public static int HEADER_LENTH = 16;
+	public static int HEADER_LENTH = 2;
 	public byte qr; 	// response (1 bit)
-	public byte opcode; // (4 bits) 
+	public byte opcode; // (4 bits)
 	public byte aa;	 	// Authoritative Answer (1 bit)
 	public byte tc; 	// Truncated (1 bit)
 	public byte rd; 	// Recursion desired (1 bit) // fin 0
@@ -14,7 +19,7 @@ public class Flags {
 	public byte rcode; 	// Reply code (4 bits) // fin 1
 	
 	//Constructeur 
-	public Flags (byte qr, byte opcode, byte aa, byte tc, byte rd, byte ra, byte z, byte asa, 
+	public Flags (byte qr, byte opcode, byte aa, byte tc, byte rd, byte ra, byte z, byte asa,
 			byte nad, byte rcode) {
 		this.qr = qr;
 		this.opcode = opcode;
@@ -27,219 +32,121 @@ public class Flags {
 		this.nad = nad;
 		this.rcode = rcode;
 	}
-	
-	// Méthodes 
-	public static Flags create(List<Byte> bytes) throws NotEnoughBytesException{
-		if (bytes.size() < HEADER_LENTH) {
-			throw NotEnoughBytesException(HEADER_LENTH , bytes.size());
-		} 
-		this.qr		= bytes.get(0) & 0x80;
-		this.opcode = bytes.get(0) & 0x78;
-		this.aa 	= bytes.get(0) & 0x04;
-		this.tc 	= bytes.get(0) & 0x02;
-		this.rd 	= bytes.get(0) & 0x01;
-		this.ra 	= bytes.get(0) & 0x80;
-		this.z  	= bytes.get(0) & 0x40;
-		this.asa 	= bytes.get(0) & 0x20;
-		this.nad 	= bytes.get(0) & 0x10;
-		this.rcode 	= bytes.get(0) & 0x0F;	
-		
+
+	// Méthodes
+
+	public static Flags create(ByteBuffer bytes) throws NotEnoughBytesException {
+		if (bytes.remaining() < HEADER_LENTH) {
+			throw new NotEnoughBytesException(HEADER_LENTH ,bytes.remaining());
+		}
+
+		byte qr		= (byte) (bytes.get(0) >> 7 & 0x01);
+		byte opcode = (byte) (bytes.get(0) >> 3 & 0x0F);
+		byte aa 	= (byte) (bytes.get(0) >> 2 & 0x01);
+		byte tc 	= (byte) (bytes.get(0) >> 1 & 0x01);
+		byte rd 	= (byte) (bytes.get(0) >> 0 & 0x01);
+		byte ra 	= (byte) (bytes.get(1) >> 7 & 0x01);
+		byte z  	= (byte) (bytes.get(1) >> 6 & 0x01);
+		byte asa 	= (byte) (bytes.get(1) >> 5 & 0x01);
+		byte nad 	= (byte) (bytes.get(1) >> 4 & 0x01);
+		byte rcode 	= (byte) (bytes.get(1) & 0x0F);
+
 		return new Flags(qr,opcode,aa,tc,rd,ra,z,asa,nad,rcode);
 	}
-	String delimeter = "\n";
-	String prefix = Flags.class.getSimpleName() + " : \n ->";
-	String sufix = "\n";
-	
+
 	
 	public String reponse(byte qr) {
-		switch(qr) {
-			case 0 :
-				return "Message is a query";
-				break;
-			case 1 :
-				return "Message is an answer";
-				break
-			default :
-				return "Unknown";
-				break;
-		}
+		return switch (qr) {
+			case 0 -> "Message is a query";
+			case 1 -> "Message is an answer";
+			default -> "Unknown";
+		};
 	}
 	public String opcode(byte opcode) {
-		switch (opcode) {
-			case 0 :
-				return " Standard query (Query)" ;
-				break ; 
-			case 1 :
-				return " Inverse request (IQuery)"; 
-				break;
-			case 2 : 
-				return " Server status (Status)";
-				break;
-			case 3 : 
-			case 4 : 
-			case 5 :
-			case 6 : 
-			case 7 : 
-			case 8 : 
-			case 9 : 
-			case 10 : 
-			case 11 :
-			case 12 : 
-			case 13 : 
-			case 14 :
-			case 15 :  
-				return " Reserved ";
-				break;
-			default : 
-				return " Unknown";
-				break;
-		}
-		
+		return switch (opcode) {
+			case 0 -> " Standard query (Query 0)";
+			case 1 -> " Inverse request (IQuery 1)";
+			case 2 -> " Server status (Status 2)";
+			case 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 -> " Reserved "+opcode;
+			default -> " Unknown";
+		};
 	}
 	public String authoritativeAnswer(byte aa) {
-		switch (aa) {
-			case 0 : 
-				return " Not Authoritative in the field ";
-				break; 
-			case 1 : 
-				return " Authoritative in the field  ";
-				break;
-			default : 
-				return " Unknown";
-		
-		}
+		return switch (aa) {
+			case 0 -> " Not Authoritative in the field (0)";
+			case 1 -> " Authoritative in the field  (1)";
+			default -> " Unknown";
+		};
 	}
 	public String truncated(byte tr) {
-		switch (tr) {
-		case 0 : 
-			return " Message is not truncated ";
-			break; 
-		case 1 : 
-			return " Message is truncated ";
-			break;
-		default : 
-			return " Unknown";
-	
-		} 
+		return switch (tr) {
+			case 0 -> " Message is not truncated (0)";
+			case 1 -> " Message is truncated (1)";
+			default -> " Unknown";
+		};
 	}
 	public String recursionDesired(byte rd) {
-		switch (rd) {
-		case 0 : 
-			return " Don't do query recurcively ";
-			break; 
-		case 1 : 
-			return " Do query recursively ";
-			break;
-		default : 
-			return " Unknown";
-	
-		}
+		return switch (rd) {
+			case 0 -> " Don't do query recursively (0)";
+			case 1 -> " Do query recursively (1)";
+			default -> " Unknown";
+		};
 	}
 	public String recursionAvailable(byte ra) {
-		switch (ra) {
-		case 0 : 
-			return " Recursive query accepted ";
-			break; 
-		case 1 : 
-			return " Server can't do recursive queries ";
-			break;
-		default : 
-			return " Unknown ";
-	
-		}
+		return switch (ra) {
+			case 0 -> " Recursive query accepted (0)";
+			case 1 -> " Server can't do recursive queries (1)";
+			default -> " Unknown ";
+		};
 	}
 	public String z(byte z) {
-		switch (z) {
-		case 0 : 
-			return " Reseved ";
-			break; 
-		case 1 : 
-			return " Not reserved ";
-			break;
-		default : 
-			return " Unknown";
-	
-		} 
+		return switch (z) {
+			case 0 -> " Reserved (0)";
+			case 1 -> " Not reserved (1)";
+			default -> " Unknown";
+		};
 	}
 	public String answerAuthentificated(byte asa) {
-		switch (asa) {
-		case 0 : 
-			return "Answer was not authentificated by the server ";
-			break; 
-		case 1 : 
-			return " Accepted ";
-			break;
-		default : 
-			return " Unknown";
-	
-		}
+		return switch (asa) {
+			case 0 -> "Answer was not authentificated by the server (0)";
+			case 1 -> " Accepted (1)";
+			default -> " Unknown";
+		};
 	}
 	public String nonAuthentificatedData(byte nad) {
-		switch (nad) {
-		case 0 : 
-			return " Unacceptable";
-			break; 
-		case 1 : 
-			return " Acceptable";
-			break;
-		default : 
-			return " Unknown";
-	
-		} 
+		return switch (nad) {
+			case 0 -> " Unacceptable (0)";
+			case 1 -> " Acceptable (1) ";
+			default -> " Unknown";
+		};
 	}
 	public String rcode(byte rcode) {
-		switch (rcode) {
-		case 0 : 
-			return " No error (0) ";
-			break; 
-		case 1 : 
-			return " Format error in the query (1) ";
-			break;
-		case 2 : 
-			return " Problem on the server (2) ";
-			break ; 
-		case 3 : 
-			return " The name does not exist (3) ";
-			break ; 
-		case 4 :
-			return " Not implemented (4) ";
-			break ;
-		case 5  :
-			return " Refus (5)";
-			break ;
-		case 6 : 
-		case 7 : 
-		case 8 : 
-		case 9 : 
-		case 10 : 
-		case 11 :
-		case 12 : 
-		case 13 : 
-		case 14 :
-		case 15 : 
-			return " Reserved (" + rcode + ") ";
-			break;
-		default : 
-			return " Unknown";
-			break ;
-			
-		}
+		return switch (rcode) {
+			case 0 -> " No error (0) ";
+			case 1 -> " Format error in the query (1) ";
+			case 2 -> " Problem on the server (2) ";
+			case 3 -> " The name does not exist (3) ";
+			case 4 -> " Not implemented (4) ";
+			case 5 -> " Refus (5)";
+			case 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 -> " Reserved (" + rcode + ") ";
+			default -> " Unknown";
+		};
 	}
 	
-	String delimiter = " \n -> ";
-	String prefix 	 = Flags.class.getSimpleName() + " :\n";
-	String sufix	 = "\n";
+	public String delimiter = " \n -> ";
+	public String prefix 	 = Flags.class.getSimpleName() + " :\n";
+	public String sufix	 = "";
 	
 	
 	public String toString() {
-		return new StringJoiner(delmiter, prefix , sufix)
-				.add("Response : " + this.reponse(qr))
+		return new StringJoiner(delimiter, prefix , sufix)
+				.add(" -> Response : " + this.reponse(qr))
 				.add("Opcode : " + this.opcode(opcode))
 				.add("Authoritative Answer : " +this.authoritativeAnswer(aa))
-				.add("Truncated : " + this.truncated(tr))
-				.add("Recursion desired :" + this.recursionDesired(rd))
+				.add("Truncated	: " + this.truncated(tc))
+				.add("Recursion desired	:" + this.recursionDesired(rd))
 				.add("Recursion available : " +this.recursionAvailable(ra))
-				.add("Z : " + this.z(z))
+				.add("Z	: " + this.z(z))
 				.add("Answer authenticated : " + this.answerAuthentificated(asa))
 				.add("Non-authenticated data : " + this.nonAuthentificatedData(nad))
 				.add("Reply code : " + this.rcode(rcode))

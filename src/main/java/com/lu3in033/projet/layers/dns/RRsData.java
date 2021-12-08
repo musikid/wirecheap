@@ -1,17 +1,25 @@
-package projet;
+package com.lu3in033.projet.layers.dns;
 
+import com.lu3in033.projet.layers.NotEnoughBytesException;
+import com.lu3in033.projet.layers.ipv4.Ipv4Address;
+
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
 public class RRsData {
-	public static int nextByte ;
 	//attributs
-	
-	public String domain = ""; //OK 
+
+	public boolean questionSection;
+	//Question section
+	public String domain ; //OK
 	public short type ; 
-	public int classe ; 
+	public short classe ;
+	//Other sections
+	public int ttl;
+	public short rdlenght;
 	
 	//A 
 	public static short typeA = 0x0001;
@@ -38,18 +46,22 @@ public class RRsData {
 	public int refresh 	;
 	public int retry 	;
 	public int expire 	;
+
+	public static short typeAny = 0x00ff;
 	
 
 	
 	//constructeur 
-	public RRsData (String domain, short type, int classe, Ipv4Address ip, short preference,
+	public RRsData (String domain, short type, short classe,int ttl, short rdlenght, Ipv4Address ip, short preference,
 			String exchange, String nsdName, String ptrName, String mName, String rName, 
-			int serial, int refresh, int retry, int expire) {
+			int serial, int refresh, int retry, int expire, boolean questionSection) {
 		
 		this.domain 	= domain;
 		this.type 		= type;
 		this.classe 	= classe;
-		this.ip 		=ip;
+		this.ttl		= ttl;
+		this.rdlenght	= rdlenght;
+		this.ip 		= ip;
 		this.preference = preference;
 		this.exchange 	= exchange;
 		this.nsdName 	= nsdName;
@@ -60,73 +72,78 @@ public class RRsData {
 		this.refresh 	= refresh;
 		this.retry 		= retry;
 		this.expire 	= expire;
+		this.questionSection = questionSection;
 		
 	}
-	
-	
-	
-	public static RRsData create(List<Byte> bytes) {
+
+
+	public static RRsData create(ByteBuffer bytes, boolean questionSection) {
 		//to recover the common values
 		String domain 	= readDomain(bytes);
-		short type 	  	= getShort(bytes, nextByte); nextByte+=2;
-		int classe 	  	= getWord(bytes, nextByte); nextByte+=4;
-		
-		//type A
-		switch (type) {
-			case typeA :
-				Ipv4Address ipv4 = Ipv4Address.create(bytes.subList(nextByte, nextByte+4));nextByte+=4;
-				return new RRsData(domain,type, classe, ipv4, -1, "", "", "", "", "", -1,
-						-1, -1, -1);
-				break;
-			
-			case typeMX :
-				short preference = getShort(bytes, nextByte); nextByte+=2;
-				String exchange  = readDomain(bytes.subList(nextByte, bytes.size()));
-				return new RRsData(domain,type, classe, null, preference, exchange, "", "", "", "", -1,
-						-1, -1, -1);
-				break;
-			
-			case typeNS : 
-				String nsdName 	 = readDomain(bytes.subList(nextByte, bytes.size()));
-				return new RRsData(domain,type, classe, null, -1, "", nsdName, "", "", "", -1,
-						-1, -1, -1);
-				break;
-			
-			case typePTR : 
-				String ptrName 	 = readDomain(bytes.subList(nextByte, bytes.size()));
-				return new RRsData(domain,type, classe, null, -1, "", "",ptrName, "", "", -1,
-						-1, -1, -1);
-				break;
-				
-			case typeSOA :
-				String mName	 = readDomain(bytes.subList(nextByte, bytes.size()));
-				String rName	 = readDomain(bytes.subList(nextByte, bytes.size()));
-				int serial		 = getWord(bytes, nextByte); nextByte +=4;
-				int refresh		 = getWord(bytes, nextByte); nextByte +=4;
-				int retry		 = getWord(bytes, nextByte); nextByte +=4;
-				int expire		 = getWord(bytes, nextByte); nextByte +=4;
-				return new RRsData(domain,type, classe, null, -1, "", "", "", mName, rName, serial,
-						refresh, retry, expire);
-				break; 
-			default : 
+		short type 	  	= bytes.getShort();
+		short classe 	= bytes.getShort();
+
+
+		String vide = "";
+		if (questionSection == true){
+			return new RRsData(domain, type, classe,-1, (short)-1, null, (short) -1, vide, vide, vide,
+					vide, vide, -1, -1, -1, -1, questionSection);
+
+		} else {
+			int ttl = bytes.getInt();
+			short rdlenght =   bytes.getShort();
+
+			if (type == typeA) {
+				ByteBuffer rawIP = ByteBuffer.allocate(4);
+				bytes.get(rawIP.array());
+				Ipv4Address ipv4 = null;
+				try {
+					ipv4 = Ipv4Address.create(rawIP);
+				} catch (NotEnoughBytesException e) {
+					e.printStackTrace();
+				}
+				return new RRsData(domain, type, classe,ttl,rdlenght, ipv4, (short) -1, vide, vide, vide,
+						vide, vide, -1, -1, -1, -1,questionSection);
+
+			} else if (type == typeMX) {
+				short preference = bytes.getShort();
+				String exchange = readDomain(bytes);
+				return new RRsData(domain, type, classe,ttl,rdlenght, null, preference, exchange, vide, vide, vide,
+						vide, -1, -1, -1, -1,questionSection);
+
+			} else if (type == typeNS) {
+				String nsdName = readDomain(bytes);
+				return new RRsData(domain, type, classe,ttl,rdlenght, null, (short) -1, vide, nsdName, vide,
+						vide, vide, -1, -1, -1, -1,questionSection);
+
+			} else if (type == typePTR) {
+				String ptrName = readDomain(bytes);
+				return new RRsData(domain, type, classe,ttl,rdlenght, null, (short) -1, vide, vide, ptrName,
+						vide, vide, -1, -1, -1, -1,questionSection);
+
+			} else if (type == typeSOA) {
+				String mName = readDomain(bytes);
+				String rName = readDomain(bytes);
+				int serial = bytes.getInt();
+				int refresh = bytes.getInt();
+				int retry = bytes.getInt();
+				int expire = bytes.getInt();
+				return new RRsData(domain, type, classe,ttl,rdlenght, null, (short) -1, vide, vide, vide,
+						mName, rName, serial, refresh, retry, expire,questionSection);
+
+			} else {
+				return new RRsData(domain, type, classe,ttl, rdlenght, null, (short) -1, vide, vide, vide,
+						vide, vide, -1, -1, -1, -1,questionSection);
+			}
 		}
-		
+
 	}
-	
-	public static short getShort(List<Byte> bytes, int i) {
-        return (short) (bytes.get(i) << 8 | bytes.get(i + 1) & 0xFF);
-    }
-	
-	public static int getWord(List<Byte> bytes, int i) {
-        return (int) (bytes.get(i) << 8*3 | bytes.get(i) << 8*2| bytes.get(i) << 8| bytes.get(i + 1) & 0xFF);
-    }
-	
-	
-	public static String readDomain(List<Byte> bytes){
+
+	public static String readDomain(ByteBuffer bytes){
 		
 		List<String> list2Domain = new ArrayList<String>();
 		byte i = 0;
-		byte partDomainLenght = bytes.get(i);
+		byte partDomainLenght = bytes.get();
 		byte nextByteToBeTreated = (byte) (i+1);
 		byte endPartDomain = (byte) (partDomainLenght + nextByteToBeTreated -1 );
 		
@@ -135,7 +152,7 @@ public class RRsData {
 			byte[] hexToConvert = new byte[partDomainLenght]; 
 			int j = 0;
 			for(i = nextByteToBeTreated; i<= endPartDomain; i++) {
-				hexToConvert[j] = bytes.get(i);
+				hexToConvert[j] = bytes.get();
 				j++;
 			}
 
@@ -143,18 +160,11 @@ public class RRsData {
 			list2Domain.add(s);
 			
 			nextByteToBeTreated = (byte) (endPartDomain  + 1);
-			partDomainLenght 	= bytes.get(nextByteToBeTreated);
+			partDomainLenght 	= bytes.get();
 			endPartDomain 		= (byte) (nextByteToBeTreated + partDomainLenght );
 			
 			nextByteToBeTreated ++;
 			
-		}
-		
-		try {
-			nextByte = nextByteToBeTreated ;
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		return assembleDomain(list2Domain);
 	}
@@ -168,64 +178,85 @@ public class RRsData {
 	}
 	
 	
-	String delimiter = " \n -> ";
-	String prefix 	 = RRsData.class.getSimpleName() + " " + type + " " + classe+ ":\n";
-	String sufix	 = "\n";
+
 	
-	public String toString()
-	{
-		switch (type) {
-		case typeA :
+	public String toString() {
+		String delimiter = " \n -> ";
+		String prefix 	 = "   "+RRsData.class.getSimpleName() + " Type(" + type + ") Class(" + classe+ ") :\n";
+		String sufix	 = "\n";
+		if (questionSection == true) {
 			return new StringJoiner(delimiter, prefix, sufix)
-					.add("Domain : "+domain)
-					.add("Type   : "+type)
-					.add("Class  : "+classe)
-					.add("Ipv4   : "+ip.toString())
+					.add(" -> Domain : " + domain)
+					.add("Type   : " + type)
+					.add("Class  : " + classe)
 					.toString();
-			break;
-		
-		case typeMX :
+		} else {
+			if (type == typeA) {
+				return new StringJoiner(delimiter, prefix, sufix)
+						.add(" -> Domain : " + domain)
+						.add("Type   : " + type)
+						.add("Class  : " + classe)
+						.add("TTL	 : " + ttl)
+						.add("Rdlength : " + rdlenght)
+						.add("Ipv4   : " + ip.toString())
+						.toString();
+			} else if (type == typeMX) {
+				return new StringJoiner(delimiter, prefix, sufix)
+						.add(" -> Domain : " + domain)
+						.add("Type   : " + type)
+						.add("Class  : " + classe)
+						.add("TTL	 : " + ttl)
+						.add("Rdlength : " + rdlenght)
+						.add("Preference   : " + preference)
+						.add("Exchange	   : " + exchange)
+						.toString();
+			} else if (type == typeNS) {
+				return new StringJoiner(delimiter, prefix, sufix)
+						.add(" -> Domain : " + domain)
+						.add("Type   : " + type)
+						.add("Class  : " + classe)
+						.add("TTL	 : " + ttl)
+						.add("Rdlength : " + rdlenght)
+						.add("NSDName   : " + nsdName)
+						.toString();
+			} else if (type == typePTR) {
+				return new StringJoiner(delimiter, prefix, sufix)
+						.add(" -> Domain : " + domain)
+						.add("Type   : " + type)
+						.add("Class  : " + classe)
+						.add("TTL	 : " + ttl)
+						.add("Rdlength : " + rdlenght)
+						.add("PTRName   : " + ptrName)
+						.toString();
+			} else if (type == typeSOA) {
+				return new StringJoiner(delimiter, prefix, sufix)
+						.add(" -> Domain : " + domain)
+						.add("Type   : " + type)
+						.add("Class  : " + classe)
+						.add("TTL	 : " + ttl)
+						.add("Rdlength : " + rdlenght)
+						.add("MName  : " + mName)
+						.add("RName  : " + rName)
+						.add("Serial : " + serial)
+						.add("Refresh: " + refresh)
+						.add("Retry  : " + retry)
+						.add("Eexpire: " + expire)
+						.toString();
+			} else if (type == typeAny) {
+				return new StringJoiner(delimiter, prefix, sufix)
+						.add(" -> Domain : " + domain)
+						.add("Type   : " + type)
+						.add("Class  : " + classe)
+						.toString();
+			}
 			return new StringJoiner(delimiter, prefix, sufix)
-					.add("Domain : "+domain)
-					.add("Type   : "+type)
-					.add("Class  : "+classe)
-					.add("Preference   : "+preference)
-					.add("Exchange	   : "+exchange)
+					.add(" -> Domain : " + domain)
+					.add("Type   : " + type)
+					.add("Class  : " + classe)
+					.add("TTL	 : " + ttl)
+					.add("Rdlength : " + rdlenght)
+					.add("this type of data is not taken by the application")
 					.toString();
-			break;
-		
-		case typeNS : 
-			return new StringJoiner(delimiter, prefix, sufix)
-					.add("Domain : "+domain)
-					.add("Type   : "+type)
-					.add("Class  : "+classe)
-					.add("NSDName   : "+nsdName)
-					.toString();
-			break;
-		
-		case typePTR : 
-			return new StringJoiner(delimiter, prefix, sufix)
-					.add("Domain : "+domain)
-					.add("Type   : "+type)
-					.add("Class  : "+classe)
-					.add("PTRName   : "+ptrName)
-					.toString();
-			break;
-			
-		case typeSOA :
-			return new StringJoiner(delimiter, prefix, sufix)
-					.add("Domain : "+domain)
-					.add("Type   : "+type)
-					.add("Class  : "+classe)
-					.add("MName  : "+mName)
-					.add("RName  : "+rName)
-					.add("Serial : "+serial)
-					.add("Refresh: "+refresh)
-					.add("Retry  : "+retry)
-					.add("Eexpire: "+expire)
-					.toString();
-			break; 
-		default : 
 		}
 	}
 	
