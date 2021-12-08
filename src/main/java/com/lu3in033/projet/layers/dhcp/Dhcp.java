@@ -13,7 +13,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class Dhcp {
-    public static final int MIN_PACKET_LENGTH = 236;
+    public static final int MIN_PACKET_LENGTH = 238;
 
     public final Opcode op;
     public final HardwareType htype;
@@ -90,28 +90,33 @@ public class Dhcp {
             addOption(optionsMap, type, bytes);
         }
 
+        String sname = "";
+        String file = "";
+
         // We check if we also have options on sname and file
         DhcpOption optionOverload = optionsMap.get(DhcpOptions.OptionOverload.value);
         if (optionOverload != null) {
             byte value = optionOverload.data.rewind().get();
             if ((value & DhcpOptionOverload.OverloadSname.value) > 0) {
                 loadOverloadedOptions(optionsMap, rawSname);
+                sname = "Overloaded (Option 52)";
             }
 
             if ((value & DhcpOptionOverload.OverloadFile.value) > 0) {
                 loadOverloadedOptions(optionsMap, rawFile);
+                file = "Overloaded (Option 52)";
             }
 
             List<DhcpOption> options = new ArrayList<>(optionsMap.values());
 
             return new Dhcp(op, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr,
-                    giaddr, chaddr, "", "", options);
+                    giaddr, chaddr, sname, file, options);
         }
 
         // We use trim() to delete all null characters
-        String sname = StandardCharsets.US_ASCII.decode(rawSname).toString().trim();
+        sname = StandardCharsets.US_ASCII.decode(rawSname).toString().trim();
         // We use trim() to delete all null characters
-        String file = StandardCharsets.US_ASCII.decode(rawFile).toString().trim();
+        file = StandardCharsets.US_ASCII.decode(rawFile).toString().trim();
 
         List<DhcpOption> options = new ArrayList<>(optionsMap.values());
 
