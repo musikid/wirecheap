@@ -13,6 +13,7 @@ public enum Ipv4Options {
     private final static Set<Integer> FIXED_LENGTH = Set.of(EOOL.type, NOP.type);
     private final static Map<Integer, Ipv4Options> VALUES = Arrays.stream(Ipv4Options.values())
             .collect(Collectors.toUnmodifiableMap(t -> t.type, t -> t));
+
     public int type;
     public String prettyName;
     public Ipv4OptionFormatter formatter;
