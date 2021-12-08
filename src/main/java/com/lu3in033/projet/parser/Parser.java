@@ -51,14 +51,15 @@ public class Parser {
                 spaces().apply(state);
 
                 // Parse the bytes
-                Combinator<List<Byte>> bytesParser = many1(hexByte().skip(space()));
+                Combinator<List<Byte>> bytesParser = sep_by1(hexByte(), space());
                 if (!bytesParser.apply(state))
                     return false;
 
                 List<Byte> bytes = bytesParser.getResult(state);
 
+                Checkpoint c = state.checkpoint();
                 if (!space().apply(state))
-                    return false;
+                    state.restore(c);
 
                 // We skip everything until newline
                 skipTo(newline()).apply(state);
