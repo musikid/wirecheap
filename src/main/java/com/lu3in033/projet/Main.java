@@ -8,12 +8,15 @@ import com.lu3in033.projet.layers.ipv4.NextHeaderProtocols;
 import com.lu3in033.projet.layers.udp.Udp;
 import com.lu3in033.projet.parser.Frame;
 import com.lu3in033.projet.parser.Parser;
+import com.lu3in033.projet.parser.combinators.ParseException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
 public class Main {
+    static int DEFAULT_WIDTH = 10;
+
     public static void main(String[] args) {
         if (args.length == 0) {
             System.err.println("Usage: wirecheap [file]");
@@ -49,8 +52,16 @@ public class Main {
                     System.out.println("Payload: " + udp.payload());
                 }
             }
+        } catch (ParseException e) {
+            String line = e.content.lines().skip(e.line - 1).findFirst().get();
+            int extractStart = Math.max(0, e.column - DEFAULT_WIDTH);
+            int extractEnd = Math.min(line.length(), e.column + DEFAULT_WIDTH);
+            String extract = line.substring(extractStart, extractEnd);
+            System.err.println(new ErrorReporter(extract, extractStart, e.column, e.line, e.expected));
+            System.exit(1);
         } catch (Exception e) {
             e.printStackTrace();
+            System.exit(2);
         }
     }
 }

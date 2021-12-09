@@ -9,6 +9,18 @@ public abstract class Combinator<O> implements Function<State<? extends CharSequ
         return this.parse(new State<>(s));
     }
 
+    public <N> Combinator<N> then(Combinator<N> next) {
+        return new Combinator<>() {
+            @Override
+            public Boolean apply(State<? extends CharSequence> state) {
+                if (Combinator.this.apply(state)) {
+                    return next.apply(state);
+                }
+                return false;
+            }
+        };
+    }
+
     public Combinator<O> skip(Combinator<?> skipCombinator) {
         return new Combinator<>() {
             @Override
@@ -35,6 +47,6 @@ public abstract class Combinator<O> implements Function<State<? extends CharSequ
             return this.getResult(state);
 
         Location l = state.getLocation();
-        throw new ParseException(l.line, l.column);
+        throw new ParseException(l.line, l.column, l.pos, state.content(), state.getExpected());
     }
 }

@@ -43,8 +43,7 @@ public class ParserTest {
                 .put((byte) 0xfe).put((byte) 0x72).put((byte) 0x7c).put((byte) 0x20)
                 .put((byte) 0x72).put((byte) 0x50).put((byte) 0x14).put((byte) 0x00)
                 .put((byte) 0x00).put((byte) 0x28).put((byte) 0x24).put((byte) 0x00)
-                .put((byte) 0x00);
-        b1.rewind();
+                .put((byte) 0x00).rewind();
         ByteBuffer b2 = ByteBuffer.allocate(0x36);
         b2.put((byte) 0xbe).put((byte) 0x9a).put((byte) 0xe5).put((byte) 0xd5).put((byte) 0x31)
                 .put((byte) 0x7d).put((byte) 0x54).put((byte) 0x8d).put((byte) 0x5a)
@@ -59,16 +58,17 @@ public class ParserTest {
                 .put((byte) 0xc0).put((byte) 0x32).put((byte) 0x0a).put((byte) 0xae)
                 .put((byte) 0x3d).put((byte) 0x50).put((byte) 0x10).put((byte) 0x00)
                 .put((byte) 0xff).put((byte) 0x8f).put((byte) 0xa5).put((byte) 0x00)
-                .put((byte) 0x00);
-        b2.rewind();
+                .put((byte) 0x00).rewind();
         List<Frame> expected = Arrays.asList(new Frame(1, b1), new Frame(2, b2));
 
         String testCase = """
-                0000  54 8d 5a 56 c7 55 be 9a e5 d5 31 7d 08 00 45 28   T.ZV.U....1}..E(
-                0010  00 28 c3 ec 40 00 fb 06 f6 fd 33 90 a4 d7 c0 a8   .(..@.....3.....
-                0020  2b ad 01 bb e8 e0 28 67 1c fe 72 7c 20 72 50 14   +.....(g..r| rP.
-                0030  00 00 28 24 00 00                                 ..($..
-
+                0000 54 8d 5a 56 c7 55 be 9a e5 d5 31 7d 08 00 45 28
+                0010 00 28 c3 ec 40 00 fb 06 f6 fd 33 90 a4 d7 c0 a8
+                this is a comment line
+                0020 2b ad 01 bb e8 e0 28 67 1c fe 72 7c 20 72 50 14
+                0 fake offset
+                0030 00 00 28 24 00 00
+                a comment before another frame
                 0000  be 9a e5 d5 31 7d 54 8d 5a 56 c7 55 08 00 45 00   ....1}T.ZV.U..E.
                 0010  00 28 27 1b 00 00 80 06 00 00 c0 a8 2b ad a2 9f   .('.........+...
                 0020  86 ea e6 63 01 bb ed 29 53 c0 32 0a ae 3d 50 10   ...c...)S.2..=P.
@@ -79,7 +79,7 @@ public class ParserTest {
         List<Frame> actual = parser.parse(testCase);
         assertEquals(expected, actual);
 
-        String failTestCase = """
+        String failTestCaseHighOffset = """
                 0000  54 8d 5a 56 c7 55 be 9a e5 d5 31 7d 08 00 45 28   T.ZV.U....1}..E(
                 0010  00 28 c3 ec 40 00 fb 06 f6 fd 33 90 a4 d7 c0 a8   .(..@.....3.....
                 0020  2b ad 01 bb e8 e0 28 67 1c fe 72 7c 20 72 50 14   +.....(g..r| rP.
@@ -91,6 +91,32 @@ public class ParserTest {
                 """;
 
         Parser failParser = new Parser();
-        assertThrows(ParseException.class, () -> failParser.parse(failTestCase));
+        assertThrows(ParseException.class, () -> failParser.parse(failTestCaseHighOffset));
+
+        String failTestCaseHexByte = """
+                0000  54 8d 5aaa 56 c7 55 be 9a e5 d5 31 7d 08 00 45 28   T.ZV.U....1}..E(
+                0010  00 28 c3 ec 40 00 fb 06 f6 fd 33 90 a4 d7 c0 a8   .(..@.....3.....
+                0020  2b ad 01 bb e8 e0 28 67 1c fe 72 7c 20 72 50 14   +.....(g..r| rP.
+                0030  00 00 28 24 00 00                                 ..($..
+
+                0000  be 9a e5 d5 31 7d 54 8d 5a 56 c7 55 08 00 45 00   ....1}T.ZV.U..E.
+                0010  00 28 27 1b 00 00 80 06 00 00 c0 a8 2b ad a2 9f   .('.........+...
+                0030  00 ff 8f a5 00 00                                 ......
+                """;
+
+        assertThrows(ParseException.class, () -> failParser.parse(failTestCaseHexByte));
+
+        String failTestCaseLowOffset = """
+                0000  54 8d 5aaa 56 c7 55 be 9a e5 d5 31 7d 08 00 45 28   T.ZV.U....1}..E(
+                0010  00 28 c3 ec 40 00 fb 06 f6 fd 33 90 a4 d7 c0 a8   .(..@.....3.....
+                0010  2b ad 01 bb e8 e0 28 67 1c fe 72 7c 20 72 50 14   +.....(g..r| rP.
+                0030  00 00 28 24 00 00                                 ..($..
+
+                0000  be 9a e5 d5 31 7d 54 8d 5a 56 c7 55 08 00 45 00   ....1}T.ZV.U..E.
+                0010  00 28 27 1b 00 00 80 06 00 00 c0 a8 2b ad a2 9f   .('.........+...
+                0030  00 ff 8f a5 00 00                                 ......
+                """;
+
+        assertThrows(ParseException.class, () -> failParser.parse(failTestCaseLowOffset));
     }
 }

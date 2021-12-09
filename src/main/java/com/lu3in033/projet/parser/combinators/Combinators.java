@@ -32,7 +32,7 @@ public abstract class Combinators {
      * @return Combinator&lt;Character&gt;
      */
     public static Combinator<Character> hexDigit() {
-        return satisfy(c -> Character.isDigit(c) || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f');
+        return satisfy(c -> Character.isDigit(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F');
     }
 
     // TODO: Use a loop instead
@@ -45,7 +45,7 @@ public abstract class Combinators {
      * @return Combinator&lt;List&lt;O&gt;&gt;
      */
     public static <O> Combinator<List<O>> count(int min, Combinator<O> combinator) {
-        return count(min, Integer.MAX_VALUE, combinator);
+        return count(min, Long.MAX_VALUE, combinator);
     }
 
     /**
@@ -55,7 +55,7 @@ public abstract class Combinators {
      * @param <O>        Combinator output
      * @return Combinator&lt;List&lt;O&gt;&gt;
      */
-    public static <O> Combinator<List<O>> count(int min, int max, Combinator<O> combinator) {
+    public static <O> Combinator<List<O>> count(int min, long max, Combinator<O> combinator) {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
@@ -92,9 +92,10 @@ public abstract class Combinators {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
                 Combinator<List<Character>> c = count(2, hexDigit());
-                if (!c.apply(state))
+                if (!c.apply(state)) {
+                    state.setExpected("Valid offset");
                     return false;
-
+                }
                 String offsetString = c.getResult(state).stream().map(String::valueOf).collect(Collectors.joining());
 
                 state.setResult(Integer.parseInt(offsetString, 16));
@@ -128,18 +129,20 @@ public abstract class Combinators {
     public static <O> Combinator<List<O>> sep_by1(Combinator<O> cb, Combinator<?> delim) {
         return new Combinator<>() {
             @Override
-            public Boolean apply(State<? extends CharSequence> state) {
-                Combinator<List<O>> parser = count(1, cb.skip(delim));
+            public Boolean apply(State<?> state) {
+                if (!cb.apply(state))
+                    return false;
+
+                O first = cb.getResult(state);
+
+                Combinator<List<O>> parser = many(delim.then(cb));
+
                 if (!parser.apply(state))
                     return false;
 
                 List<O> l = parser.getResult(state);
-
-                if (cb.apply(state))
-                    l.add(cb.getResult(state));
-
+                l.add(0, first);
                 state.setResult(l);
-
                 return true;
             }
         };
@@ -191,17 +194,6 @@ public abstract class Combinators {
      */
     public static <O> Combinator<List<O>> many(Combinator<O> cb) {
         return count(0, cb);
-    }
-
-    /**
-     * Apply the combinator <i>cb</i> at least once, or more times.
-     *
-     * @param cb  Combinator to repeat
-     * @param <O> Combinator output
-     * @return Combinator&lt;List&lt;O&gt;&gt;
-     */
-    public static <O> Combinator<List<O>> many1(Combinator<O> cb) {
-        return count(1, cb);
     }
 
     /**
