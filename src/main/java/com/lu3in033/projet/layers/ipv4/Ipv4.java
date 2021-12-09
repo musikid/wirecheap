@@ -74,7 +74,7 @@ public class Ipv4 extends Layer {
         List<Ipv4Option> options = new ArrayList<>();
         // If we have options
         if (headerLength * 4 > MIN_HEADER_LENGTH) {
-            for (int type = bytes.get(); type != Ipv4Options.EOOL.type;
+            for (int type = bytes.get(); type != Ipv4Options.EOOL.type && bytes.hasRemaining();
                  type = bytes.get()) {
                 Ipv4Option option;
                 if (Ipv4Options.isFixed(type)) {
