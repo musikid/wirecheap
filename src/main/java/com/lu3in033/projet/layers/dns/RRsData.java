@@ -6,12 +6,13 @@ import com.lu3in033.projet.layers.ipv4.Ipv4Address;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
 public class RRsData {
 	//attributs
-
+	public static int startingPosition ;
 	public boolean questionSection;
 	//Question section
 	public String domain ; //OK
@@ -23,7 +24,7 @@ public class RRsData {
 	
 	//A 
 	public static short typeA = 0x0001;
-	public Ipv4Address ip	; 
+	public Ipv4Address ip	;
 	
 	//MX
 	public static short typeMX = 0x000F;
@@ -48,6 +49,10 @@ public class RRsData {
 	public int expire 	;
 
 	public static short typeAny = 0x00ff;
+
+	//listType
+	public static short[] listTab = new short[]{typeA, typeMX, typeNS, typeNS, typeSOA,typeAny};
+
 	
 
 	
@@ -73,19 +78,28 @@ public class RRsData {
 		this.retry 		= retry;
 		this.expire 	= expire;
 		this.questionSection = questionSection;
-		
 	}
 
 
 	public static RRsData create(ByteBuffer bytes, boolean questionSection) {
 		//to recover the common values
+
+
 		String domain 	= readDomain(bytes);
 		short type 	  	= bytes.getShort();
 		short classe 	= bytes.getShort();
-
-
 		String vide = "";
-		if (questionSection == true){
+
+
+		if(type != typeA && type != typeMX  && type != typeNS && type != typePTR && type != typeSOA && type != typeAny) {
+			Dns.stopParsing = true;
+			return new RRsData(domain, type, (short) -1, -1, (short) -1, null, (short) -1, vide, vide, vide,
+					vide, vide, -1, -1, -1, -1, questionSection);
+		}
+
+
+
+		if (questionSection){
 			return new RRsData(domain, type, classe,-1, (short)-1, null, (short) -1, vide, vide, vide,
 					vide, vide, -1, -1, -1, -1, questionSection);
 
@@ -136,43 +150,63 @@ public class RRsData {
 						vide, vide, -1, -1, -1, -1,questionSection);
 			}
 		}
-
 	}
 
 	public static String readDomain(ByteBuffer bytes){
-		
-		List<String> list2Domain = new ArrayList<String>();
-		byte i = 0;
-		byte partDomainLenght = bytes.get();
-		byte nextByteToBeTreated = (byte) (i+1);
-		byte endPartDomain = (byte) (partDomainLenght + nextByteToBeTreated -1 );
-		
-		
-		while(partDomainLenght != 0x00) {
-			byte[] hexToConvert = new byte[partDomainLenght]; 
-			int j = 0;
-			for(i = nextByteToBeTreated; i<= endPartDomain; i++) {
-				hexToConvert[j] = bytes.get();
-				j++;
-			}
+		byte ptr_or_label = bytes.get();
+		byte test = (byte) (ptr_or_label >> 6 & 0b11);
+		if (test == (byte)3){
+			short offset = (short) ((ptr_or_label - 0xc0)<< 8 | bytes.get() & 0xFF);
+			//short offset = (short) (ptr_or_label << 8 | bytes.get() & 0xFF);
+			//offset = (short) (offset & 0x3FFFF);
+			int recoveryPosition = bytes.position();
 
-			String s = new String(hexToConvert, StandardCharsets.UTF_8);
-			list2Domain.add(s);
-			
-			nextByteToBeTreated = (byte) (endPartDomain  + 1);
-			partDomainLenght 	= bytes.get();
-			endPartDomain 		= (byte) (nextByteToBeTreated + partDomainLenght );
-			
-			nextByteToBeTreated ++;
-			
+			bytes.position(startingPosition+ offset);
+			String domain = readDomain(bytes);
+
+			bytes.position(recoveryPosition);
+			return domain;
+
+		}else{
+			List<String> list2Domain = new ArrayList<String>();
+			byte i = 0;
+			byte partDomainLenght = ptr_or_label;
+			byte nextByteToBeTreated = (byte) (i + 1);
+			byte endPartDomain = (byte) (partDomainLenght + nextByteToBeTreated - 1);
+
+
+			while (partDomainLenght != 0x00) {
+
+				byte[] hexToConvert = new byte[partDomainLenght];
+				int j = 0;
+				for (i = nextByteToBeTreated; i <= endPartDomain; i++) {
+					hexToConvert[j] = bytes.get();
+					j++;
+				}
+
+				String s = new String(hexToConvert, StandardCharsets.UTF_8);
+				list2Domain.add(s);
+
+				nextByteToBeTreated = (byte) (endPartDomain + 1);
+				partDomainLenght = bytes.get();
+				endPartDomain = (byte) (nextByteToBeTreated + partDomainLenght);
+
+				nextByteToBeTreated++;
+
+			}
+			return assembleDomain(list2Domain);
 		}
-		return assembleDomain(list2Domain);
 	}
 	
 	public static  String assembleDomain(List<String> listDomain) {
-		String domain = listDomain.get(0);
-		for (String tmp : listDomain.subList(1, listDomain.size()) ) {
-			domain  = domain.concat("." + tmp);
+		String domain = "";
+		if (!listDomain.isEmpty()) {
+			domain = listDomain.get(0);
+		}
+		if (listDomain.size() >= 1) {
+			for (String tmp : listDomain.subList(1, listDomain.size())) {
+				domain = domain.concat("." + tmp);
+			}
 		}
 		return domain;
 	}
@@ -184,14 +218,18 @@ public class RRsData {
 		String delimiter = " \n -> ";
 		String prefix 	 = "   "+RRsData.class.getSimpleName() + " Type(" + type + ") Class(" + classe+ ") :\n";
 		String sufix	 = "\n";
-		if (questionSection == true) {
-			return new StringJoiner(delimiter, prefix, sufix)
-					.add(" -> Domain : " + domain)
-					.add("Type   : " + type)
-					.add("Class  : " + classe)
-					.toString();
-		} else {
-			if (type == typeA) {
+
+		if (type == typeA || type == typeMX  || type == typeNS || type == typePTR ||
+				type == typeSOA || type == typeAny){
+			if (questionSection == true) {
+				return new StringJoiner(delimiter, prefix, sufix)
+						.add(" -> Domain : " + domain)
+						.add("Type   : " + type)
+						.add("Class  : " + classe)
+						.toString();
+			}
+
+			else if (type == typeA) {
 				return new StringJoiner(delimiter, prefix, sufix)
 						.add(" -> Domain : " + domain)
 						.add("Type   : " + type)
@@ -249,15 +287,16 @@ public class RRsData {
 						.add("Class  : " + classe)
 						.toString();
 			}
+		}
 			return new StringJoiner(delimiter, prefix, sufix)
 					.add(" -> Domain : " + domain)
 					.add("Type   : " + type)
 					.add("Class  : " + classe)
 					.add("TTL	 : " + ttl)
 					.add("Rdlength : " + rdlenght)
-					.add("this type of data is not taken by the application")
+					.add("This type of data is not taken by the application, The parsing stopped")
 					.toString();
-		}
+
 	}
 	
 }

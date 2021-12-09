@@ -134,7 +134,7 @@ public class Flags {
 	}
 	
 	public String delimiter = " \n -> ";
-	public String prefix 	 = Flags.class.getSimpleName() + " :\n";
+	public String prefix 	= Flags.class.getSimpleName() + " :\n";
 	public String sufix	 = "";
 	
 	

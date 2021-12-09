@@ -16,6 +16,8 @@ public class Dns {
 	 public short answerRRs;  // 6,7
 	 public short authorityRRs; // 8,9
 	 public short additionalRRs; // 10,11
+
+	public static boolean stopParsing = false;
 	 
 	 //MESSAGE UTILE DNS 
 	 //Question section 
@@ -48,9 +50,14 @@ public class Dns {
 	 
 	 //Méthode 
 	 public static Dns create(ByteBuffer bytes) throws NotEnoughBytesException {
+
 		 if (bytes.remaining() < HEADER_LENGHT) {
 	            throw new NotEnoughBytesException(HEADER_LENGHT, bytes.remaining());
 	        }
+
+		 RRsData.startingPosition = bytes.position();
+
+
 		 //recupérer tous les attributs 
 		 //entête
 		 short identifier 	 = bytes.getShort();
@@ -61,37 +68,43 @@ public class Dns {
 		 short answerRRs 	  = bytes.getShort();
 		 short authorityRRs   = bytes.getShort();
 		 short additionalRRs  = bytes.getShort();
-		 System.out.println(identifier);
-		 System.out.println(flags);
-		 System.out.println(questions);
-		 System.out.println(answerRRs);
-		 System.out.println(authorityRRs);
-		 System.out.println(additionalRRs);
 
+		 //RRsData.startingPosition = bytes.position();
 		 List<RRsData> questionSection = new ArrayList<RRsData>();
 		 boolean questionSectionBool = false;
-		 if (questions >= 1){questionSectionBool= true; }
+		 if (questions >= 1){questionSectionBool= true;}
 		 for (int i = 0; i<questions; i++){
-			 RRsData data = RRsData.create(bytes,true);
-			 questionSection.add(data);
-
+			 if (stopParsing) {
+				 break;
+			 }
+				 RRsData data = RRsData.create(bytes, true);
+				 questionSection.add(data);
 		 }
 
 		 List<RRsData>  answerSection = new ArrayList<RRsData>();
 		 for (int i = 0; i<answerRRs; i++){
-			 RRsData data = RRsData.create(bytes,false);
+			 if (stopParsing) {
+				 break;
+			 }
+			 RRsData data = RRsData.create(bytes, false);
 			 answerSection.add(data);
 		 }
 
 		 List<RRsData>  authoritySection = new ArrayList<RRsData>();
 		 for (int i = 0; i<authorityRRs; i++){
-			 RRsData data = RRsData.create(bytes,false);
+			 if (stopParsing) {
+				 break;
+			 }
+			 RRsData data = RRsData.create(bytes, false);
 			 authoritySection.add(data);
 		 }
 
 		 List<RRsData> additionalSection = new ArrayList<RRsData>();
 		 for (int i = 0; i<additionalRRs; i++){
-			 RRsData data = RRsData.create(bytes,false);
+			 if(stopParsing) {
+				 break;
+			 }
+			 RRsData data = RRsData.create(bytes, false);
 			 additionalSection.add(data);
 		 }
 
