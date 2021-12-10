@@ -27,7 +27,7 @@ public class DhcpOption {
 
     @Override
     public String toString() {
-        return new StringJoiner("\n      -> ", "Option\n      -> ", "")
+        return new StringJoiner("\n\t\t\t-> ", "Option\n\t\t\t-> ", "")
                 .add(String.format("Type: %d (%s)", type, name))
                 .add("Length: " + length)
                 .add("Data: " + formatter.apply(data.rewind()))

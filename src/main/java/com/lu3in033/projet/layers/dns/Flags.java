@@ -134,22 +134,22 @@ public class Flags {
 	}
 
 	public String delimiter = " \n\t\t-> ";
-	public String prefix 	= Flags.class.getSimpleName() + " :\n";
-	public String sufix	 = "";
+	public String prefix = Flags.class.getSimpleName() + ":\n";
+	public String sufix = "";
 	
 	
 	public String toString() {
-		return new StringJoiner(delimiter, prefix , sufix)
-				.add(" \t\t-> Response : " + this.reponse(qr))
-				.add("Opcode : " + this.opcode(opcode))
-				.add("Authoritative Answer : " +this.authoritativeAnswer(aa))
-				.add("Truncated	: " + this.truncated(tc))
-				.add("Recursion desired	:" + this.recursionDesired(rd))
-				.add("Recursion available : " +this.recursionAvailable(ra))
-				.add("Z	: " + this.z(z))
-				.add("Answer authenticated : " + this.answerAuthentificated(asa))
-				.add("Non-authenticated data : " + this.nonAuthentificatedData(nad))
-				.add("Reply code : " + this.rcode(rcode))
+		return new StringJoiner(delimiter, prefix, sufix)
+				.add(" \t\t-> Response: " + this.reponse(qr))
+				.add("Opcode: " + this.opcode(opcode))
+				.add("Authoritative Answer: " + this.authoritativeAnswer(aa))
+				.add("Truncated: " + this.truncated(tc))
+				.add("Recursion desired:" + this.recursionDesired(rd))
+				.add("Recursion available: " + this.recursionAvailable(ra))
+				.add("Z: " + this.z(z))
+				.add("Answer authenticated: " + this.answerAuthentificated(asa))
+				.add("Non-authenticated data: " + this.nonAuthentificatedData(nad))
+				.add("Reply code: " + this.rcode(rcode))
 				.toString();
 	}
 }

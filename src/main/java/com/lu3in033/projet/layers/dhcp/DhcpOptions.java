@@ -38,7 +38,6 @@ public enum DhcpOptions {
     DefaultTTL(23, "Default IP Time-to-live", DhcpOptionFormatter.UNSIGNED_BYTE),
     PathMTUTimeout(24, "Path MTU Aging Timeout", DhcpOptionFormatter.UNSIGNED_INTEGER),
     PathMTUTable(25, "Path MTU Plateau Table", buffer -> {
-        // TODO: Change delimiter
         StringJoiner s = new StringJoiner(", ");
         int nbCount = buffer.remaining() / 2;
         for (int i = 0; i < nbCount; i++) {
@@ -110,7 +109,7 @@ public enum DhcpOptions {
     }),
     ServerId(54, "Server Identifier", DhcpOptionFormatter.IP),
     ParameterRequestList(55, "Parameter Request List", byteBuffer -> {
-        StringJoiner s = new StringJoiner("\n        -> ", "\n        -> ", "");
+        StringJoiner s = new StringJoiner("\n\t\t\t\t-> ", "\n\t\t\t\t-> ", "");
         int size = byteBuffer.remaining();
 
         for (int i = 0; i < size; i++) {

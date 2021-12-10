@@ -6,7 +6,7 @@
 
     <groupId>com.lu3in033.projet</groupId>
     <artifactId>Wirecheap</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>Wirecheap</name>
     <description>Wireshark, but it's cheaper.</description>
     <url>https://gitlab.com/musikid/wirecheap</url>

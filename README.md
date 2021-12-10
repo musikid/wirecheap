@@ -2,6 +2,8 @@
 
 ## Wireshark, but it's cheaper (and less good).
 
+NOTE: The zip release is distributed with binaries for each platform.
+
 ## Requirements
 
 - Java 17

@@ -37,7 +37,7 @@ public class Udp extends Layer {
 
     @Override
     public String toString() {
-        return new StringJoiner("\n -> ", "UDP\n -> ", "\n")
+        return new StringJoiner("\n\t-> ", "UDP\n\t-> ", "\n")
                 .add("Destination port: " + Short.toUnsignedInt(destPort))
                 .add("Source port: " + Short.toUnsignedInt(srcPort))
                 .add("Length: " + Short.toUnsignedInt(length))

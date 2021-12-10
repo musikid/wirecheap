@@ -101,13 +101,13 @@ public class Ipv4 extends Layer {
         if (optionsStr.isEmpty())
             optionsStr = "No options";
 
-        return new StringJoiner("\n -> ", "IPv4\n -> ", "\n")
+        return new StringJoiner("\n\t-> ", "IPv4\n\t-> ", "\n")
                 .add("Version: " + version)
                 .add(String.format("Header length: %d (%d bytes)", headerLength, headerLength * 4))
                 .add("Type of service: " + typeOfService)
                 .add(String.format("Total length: %d", Short.toUnsignedInt(totalLength)))
                 .add("Identification: " + String.format("0x%04x (%d)", id, Short.toUnsignedInt(id)))
-                .add("Flags: " + String.format("0x%02x", flags.rawValue) + "\n    -> " + flags.toString().replaceAll("\n", "\n    -> "))
+                .add("Flags: " + String.format("0x%02x", flags.rawValue) + "\n\t\t-> " + flags.toString().replaceAll("\n", "\n\t\t-> "))
                 .add("Fragment offset: " + fragmentOffset)
                 .add("Time to live: " + Byte.toUnsignedInt(ttl))
                 .add("Protocol: " + nextHeaderProtocol)

@@ -29,10 +29,11 @@ public class Main {
         try {
             List<Frame> frames = parser.parse(Files.readString(p));
             for (Frame frame : frames) {
+                System.out.println("========================");
                 System.out.printf("Frame #%d%n%n", frame.id);
                 Ethernet eth = Ethernet.create(frame.buffer);
                 System.out.println(eth);
-                if (eth.type.value() != EtherTypes.IPv4.value()) {
+                if (eth.type.type != EtherTypes.IPv4.value) {
                     System.out.println("Payload: " + eth.payloadString());
                     continue;
                 }
@@ -46,16 +47,17 @@ public class Main {
 
                 Udp udp = Udp.create(frame.buffer);
                 System.out.println(udp);
-                
+
                 if (udp.destPort == 67 || udp.destPort == 68) {
                     Dhcp dhcp = Dhcp.create(frame.buffer);
                     System.out.println(dhcp);
-                } else if (udp.destPort == 53) {
+                } else if (udp.destPort == 53 || udp.srcPort == 53) {
                     Dns dns = Dns.create(frame.buffer);
                     System.out.println(dns);
                 } else {
                     System.out.println("Payload: " + udp.payloadString());
                 }
+                System.out.println("========================");
             }
         } catch (ParseException e) {
             String line = e.content.lines().skip(e.line - 1).findFirst().get();

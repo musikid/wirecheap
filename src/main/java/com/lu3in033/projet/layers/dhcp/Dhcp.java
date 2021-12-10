@@ -124,7 +124,6 @@ public class Dhcp {
                 giaddr, chaddr, sname, file, options);
     }
 
-    // With RFC3396, we have to reunite split options
     private static void addOption(LinkedHashMap<Integer, DhcpOption> options, int type, ByteBuffer bytes) {
         if (DhcpOptions.isFixed(type)) {
             options.put(type, new DhcpOption(type, 1, ByteBuffer.allocate(0)));
@@ -137,6 +136,7 @@ public class Dhcp {
                     return new DhcpOption(key, length, data);
                 }
 
+                // With RFC3396, we have to reunite split options
                 int oldLength = oldOption.data.array().length;
                 int totalLength = oldLength + length;
                 ByteBuffer newData = ByteBuffer.allocate(totalLength);
@@ -165,9 +165,9 @@ public class Dhcp {
             e.printStackTrace();
             return null;
         }
-        String optionsStr = options.stream().map(DhcpOption::toString).collect(Collectors.joining("\n   -> "));
+        String optionsStr = options.stream().map(DhcpOption::toString).collect(Collectors.joining("\n\t\t-> "));
 
-        return new StringJoiner("\n -> ", "DHCP\n -> ", "\n")
+        return new StringJoiner("\n\t-> ", "DHCP\n\t-> ", "\n")
                 .add("Message type: " + op)
                 .add("Hardware type: " + htype)
                 .add("Hardware address length: " + hlen)
@@ -182,7 +182,7 @@ public class Dhcp {
                 .add("Client Hardware address: " + chaddrString)
                 .add("Server host name: " + (sname.isEmpty() ? "not given" : sname))
                 .add("Boot file name: " + (file.isEmpty() ? "not given" : sname))
-                .add("Options: " + options.size() + "\n   -> " + optionsStr)
+                .add("Options: " + options.size() + "\n\t\t-> " + optionsStr)
                 .toString();
     }
 }

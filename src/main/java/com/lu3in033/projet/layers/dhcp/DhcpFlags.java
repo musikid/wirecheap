@@ -9,6 +9,6 @@ public class DhcpFlags {
 
     @Override
     public String toString() {
-        return "Broadcast: " + ((flags >>> 15) > 0 ? "Enabled" : "Disabled");
+        return "Broadcast: " + ((flags & 0x8000) > 0 ? "Enabled" : "Disabled");
     }
 }

@@ -36,10 +36,10 @@ public class Ethernet extends Layer {
 
     @Override
     public String toString() {
-        return new StringJoiner("\n -> ", "Ethernet\n -> ", "\n")
+        return new StringJoiner("\n\t-> ", "Ethernet\n\t-> ", "\n")
                 .add("Source: " + src)
                 .add("Destination: " + dest)
-                .add(String.format("Type: 0x%04x (%s)", type.value(), type.name()))
+                .add(String.format("Type: 0x%04x (%s)", type.type, type.name))
                 .toString();
     }
 

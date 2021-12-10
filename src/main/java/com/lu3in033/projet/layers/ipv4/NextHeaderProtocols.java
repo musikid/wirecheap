@@ -14,11 +14,11 @@ public enum NextHeaderProtocols {
         value = (byte) v;
     }
 
-    public byte value() {
-        return value;
+    public static Optional<String> valueNameFor(int t) {
+        return Arrays.stream(EtherTypes.values()).filter(v -> v.value == t).findFirst().map(EtherTypes::name);
     }
 
-    public static Optional<String> valueNameFor(int t) {
-        return Arrays.stream(EtherTypes.values()).filter(v -> v.value() == t).findFirst().map(EtherTypes::name);
+    public byte value() {
+        return value;
     }
 }
