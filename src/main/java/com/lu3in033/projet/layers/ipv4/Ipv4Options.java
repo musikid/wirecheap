@@ -8,6 +8,9 @@ import java.util.stream.Collectors;
 
 public enum Ipv4Options {
     EOOL(0, "End of Options", Ipv4OptionFormatter.EMPTY),
+    RecordRoute(7, "Record Route", Ipv4OptionFormatter.ROUTE),
+    StrictSource(137, "Strict Source and Record Route", Ipv4OptionFormatter.ROUTE),
+    LooseSource(137, "Loose Source and Record Route", Ipv4OptionFormatter.ROUTE),
     NOP(1, "No Operation", Ipv4OptionFormatter.EMPTY);
 
     private final static Set<Integer> FIXED_LENGTH = Set.of(EOOL.type, NOP.type);

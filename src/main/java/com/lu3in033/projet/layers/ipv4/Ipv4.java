@@ -80,7 +80,7 @@ public class Ipv4 extends Layer {
                 if (Ipv4Options.isFixed(type)) {
                     option = new Ipv4Option(type, 1, ByteBuffer.allocateDirect(0));
                 } else {
-                    int length = bytes.get();
+                    int length = bytes.get() - 2;
                     ByteBuffer data = ByteBuffer.allocate(length);
                     bytes.get(data.array());
                     option = new Ipv4Option(type, length, data);
@@ -98,6 +98,8 @@ public class Ipv4 extends Layer {
     @Override
     public String toString() {
         String optionsStr = options.stream().map(Ipv4Option::toString).collect(Collectors.joining("\n   -> "));
+        if (optionsStr.isEmpty())
+            optionsStr = "No options";
 
         return new StringJoiner("\n -> ", "IPv4\n -> ", "\n")
                 .add("Version: " + version)
