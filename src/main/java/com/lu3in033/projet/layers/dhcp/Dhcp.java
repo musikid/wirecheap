@@ -6,11 +6,14 @@ import com.lu3in033.projet.layers.ipv4.Ipv4Address;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public class Dhcp {
-    public static final int MIN_PACKET_LENGTH = 236;
+    public static final int MIN_PACKET_LENGTH = 238;
 
     public final Opcode op;
     public final HardwareType htype;
@@ -23,14 +26,14 @@ public class Dhcp {
     public final Ipv4Address yiaddr;
     public final Ipv4Address siaddr;
     public final Ipv4Address giaddr;
-    public final byte[] chaddr;
+    public final ByteBuffer chaddr;
     public final String sname;
     public final String file;
     public final List<DhcpOption> options;
 
     public Dhcp(Opcode code, HardwareType htype, byte hlen, byte hops, int xid, short secs, DhcpFlags flags,
                 Ipv4Address ciaddr, Ipv4Address yiaddr, Ipv4Address siaddr, Ipv4Address giaddr,
-                byte[] chaddr, String sname, String file, List<DhcpOption> options) {
+                ByteBuffer chaddr, String sname, String file, List<DhcpOption> options) {
         this.op = code;
         this.htype = htype;
         this.hlen = hlen;
@@ -68,8 +71,8 @@ public class Dhcp {
         Ipv4Address siaddr = Ipv4Address.create(bytes);
         Ipv4Address giaddr = Ipv4Address.create(bytes);
 
-        byte[] chaddr = new byte[16];
-        bytes.get(chaddr);
+        ByteBuffer chaddr = ByteBuffer.allocate(16);
+        bytes.get(chaddr.array());
 
         ByteBuffer rawSname = ByteBuffer.allocate(64);
         bytes.get(rawSname.array());
@@ -80,67 +83,74 @@ public class Dhcp {
         int magicCookie = bytes.getInt();
 
         // Options magic happens here
-        List<DhcpOption> options = new ArrayList<>();
+        LinkedHashMap<Integer, DhcpOption> optionsMap = new LinkedHashMap<>();
         for (int type = bytes.get(); (type & 0xFF) != DhcpOptions.EndOfOptions.value
                 && bytes.hasRemaining();
              type = bytes.get()) {
-            DhcpOption option;
-            if (DhcpOptions.isFixed(type)) {
-                option = new DhcpOption(type, 1, ByteBuffer.allocate(0));
-            } else {
-                byte length = (byte) (bytes.get() & 0xFF);
-                ByteBuffer data = ByteBuffer.allocate(length);
-                bytes.get(data.array());
-                option = new DhcpOption(type, length, data);
-            }
-
-            options.add(option);
+            addOption(optionsMap, type, bytes);
         }
 
+        String sname = "";
+        String file = "";
+
         // We check if we also have options on sname and file
-        Optional<DhcpOption> optionOverload = options.stream()
-                .filter(opt -> opt.type == DhcpOptions.OptionOverload.value).findFirst();
-        if (optionOverload.isPresent()) {
-            byte value = optionOverload.get().data.get();
+        DhcpOption optionOverload = optionsMap.get(DhcpOptions.OptionOverload.value);
+        if (optionOverload != null) {
+            byte value = optionOverload.data.rewind().get();
             if ((value & DhcpOptionOverload.OverloadSname.value) > 0) {
-                loadOverloadedOptions(options, rawSname);
+                loadOverloadedOptions(optionsMap, rawSname);
+                sname = "Overloaded (Option 52)";
             }
 
             if ((value & DhcpOptionOverload.OverloadFile.value) > 0) {
-                loadOverloadedOptions(options, rawFile);
+                loadOverloadedOptions(optionsMap, rawFile);
+                file = "Overloaded (Option 52)";
             }
 
+            List<DhcpOption> options = new ArrayList<>(optionsMap.values());
+
             return new Dhcp(op, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr,
-                    giaddr, chaddr, "", "", options);
+                    giaddr, chaddr, sname, file, options);
         }
 
         // We use trim() to delete all null characters
-        String sname = StandardCharsets.US_ASCII.decode(rawSname).toString().trim();
+        sname = StandardCharsets.US_ASCII.decode(rawSname).toString().trim();
         // We use trim() to delete all null characters
-        String file = StandardCharsets.US_ASCII.decode(rawFile).toString().trim();
+        file = StandardCharsets.US_ASCII.decode(rawFile).toString().trim();
+
+        List<DhcpOption> options = new ArrayList<>(optionsMap.values());
 
         return new Dhcp(op, htype, hlen, hops, xid, secs, flags, ciaddr, yiaddr, siaddr,
                 giaddr, chaddr, sname, file, options);
     }
 
-    private static DhcpOption getOption(int type, ByteBuffer bytes) {
-        DhcpOption option;
+    // With RFC3396, we have to reunite split options
+    private static void addOption(LinkedHashMap<Integer, DhcpOption> options, int type, ByteBuffer bytes) {
         if (DhcpOptions.isFixed(type)) {
-            option = new DhcpOption(type, 1, ByteBuffer.allocate(0));
+            options.put(type, new DhcpOption(type, 1, ByteBuffer.allocate(0)));
         } else {
             byte length = (byte) (bytes.get() & 0xFF);
-            ByteBuffer data = ByteBuffer.allocate(length);
-            bytes.get(data.array());
-            option = new DhcpOption(type, length, data);
-        }
+            options.compute(type, (key, oldOption) -> {
+                if (oldOption == null) {
+                    ByteBuffer data = ByteBuffer.allocate(length);
+                    bytes.get(data.array());
+                    return new DhcpOption(key, length, data);
+                }
 
-        return option;
+                int oldLength = oldOption.data.array().length;
+                int totalLength = oldLength + length;
+                ByteBuffer newData = ByteBuffer.allocate(totalLength);
+                newData.put(oldOption.data.array());
+                bytes.get(newData.array(), oldLength - 1, length);
+                return new DhcpOption(key, totalLength, newData);
+            });
+        }
     }
 
-    private static void loadOverloadedOptions(List<DhcpOption> options, ByteBuffer bytes) {
+    private static void loadOverloadedOptions(LinkedHashMap<Integer, DhcpOption> options, ByteBuffer bytes) {
         while (bytes.hasRemaining()) {
             int type = bytes.get();
-            options.add(getOption(type, bytes));
+            addOption(options, type, bytes);
         }
     }
 
@@ -149,8 +159,8 @@ public class Dhcp {
         String chaddrString;
         try {
             chaddrString = (htype.rawValue == HardwareType.HardwareTypes.Ethernet.value)
-                    ? MacAddress.create(ByteBuffer.wrap(chaddr).slice(1, 6)).toString()
-                    : Arrays.toString(chaddr);
+                    ? MacAddress.create(chaddr.rewind()).toString()
+                    : DhcpOptionFormatter.RAW_HEX.apply(chaddr.rewind());
         } catch (NotEnoughBytesException e) {
             e.printStackTrace();
             return null;
@@ -170,9 +180,9 @@ public class Dhcp {
                 .add("Next IP address: " + siaddr)
                 .add("Relay agent IP address: " + giaddr)
                 .add("Client Hardware address: " + chaddrString)
-                .add("Server host name: " + sname)
-                .add("Boot file name: " + file)
-                .add("Options: " + optionsStr)
+                .add("Server host name: " + (sname.isEmpty() ? "not given" : sname))
+                .add("Boot file name: " + (file.isEmpty() ? "not given" : sname))
+                .add("Options: " + options.size() + "\n   -> " + optionsStr)
                 .toString();
     }
 }

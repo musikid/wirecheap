@@ -1,11 +1,13 @@
 package com.lu3in033.projet.parser.combinators;
 
 public class Location {
-    public final long line;
-    public final long column;
+    public final int line;
+    public final int column;
+    public final int pos;
 
-    public Location(long l, long c) {
+    public Location(int l, int c, int pos) {
         line = l;
         column = c;
+        this.pos = pos;
     }
 }

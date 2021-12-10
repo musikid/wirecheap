@@ -42,26 +42,46 @@ public class Parser {
         return new Combinator<>() {
             @Override
             public Boolean apply(State<? extends CharSequence> state) {
-                if (!hexOffset().apply(state))
+                if (!hexOffset().apply(state)) {
+                    state.setExpected("valid offset");
                     return false;
-
+                }
                 int offset = hexOffset().getResult(state);
 
                 // We skip spaces
-                spaces().apply(state);
+                if (!spaces().apply(state)) {
+                    state.setExpected("space(s) between offset and bytes");
+                    return false;
+                }
 
                 // Parse the bytes
-                Combinator<List<Byte>> bytesParser = many1(hexByte().skip(space()));
-                if (!bytesParser.apply(state))
+                Combinator<List<Byte>> bytesParser = sep_by1(hexByte(), space());
+                if (!bytesParser.apply(state)) {
+                    state.setExpected("at least one byte");
                     return false;
-
+                }
                 List<Byte> bytes = bytesParser.getResult(state);
 
-                if (!space().apply(state))
-                    return false;
+                // We check if it's the end of line,
+                // if it isn't then we have a misleading byte
+                Checkpoint c = state.checkpoint();
+                if (!space().apply(state)) {
+                    state.restore(c);
+                    if (!newline().apply(state)) {
+                        state.setExpected("valid byte (0x00-0xFF)");
+                        state.restore(c);
+                        return false;
+                    }
+                } else {
+                    // Inline comments starts with two spaces
+                    if (!space().apply(state)) {
+                        state.setExpected("valid byte (0x00-0xFF)");
+                        return false;
+                    }
 
-                // We skip everything until newline
-                skipTo(newline()).apply(state);
+                    // We skip everything until newline
+                    skipTo(newline()).apply(state);
+                }
 
                 Fragment fragment = new Fragment(offset, bytes);
                 state.setResult(fragment);
@@ -98,6 +118,7 @@ public class Parser {
                     return true;
                 }
 
+                state.setExpected(String.format("valid offset: 0x%1$04x (%1$d) do not overlap %2$d bytes", f.offset, dataLength));
                 state.restore(c);
                 return false;
             }

@@ -9,6 +9,7 @@ public class State<S extends CharSequence> {
     private final int len;
     private int pos = 0;
     private Object result;
+    private String expected;
 
     public State(S src) {
         source = src;
@@ -43,15 +44,27 @@ public class State<S extends CharSequence> {
         result = res;
     }
 
+    public String getExpected() {
+        return expected;
+    }
+
+    public void setExpected(String expected) {
+        this.expected = expected;
+    }
+
+    public String content() {
+        return source.toString();
+    }
+
     public Location getLocation() {
         if (len == 0) {
-            return new Location(1, 0);
+            return new Location(1, 0, pos);
         }
 
         String before = source.subSequence(0, pos).toString();
-        long line = before.chars().filter(c -> c == NEWLINE).count() + 1;
-        long col = pos - before.lastIndexOf(NEWLINE);
-        return new Location(line, col);
+        int line = (int) (before.chars().filter(c -> c == NEWLINE).count() + 1);
+        int col = pos - before.lastIndexOf(NEWLINE);
+        return new Location(line, col, pos);
 
     }
 }

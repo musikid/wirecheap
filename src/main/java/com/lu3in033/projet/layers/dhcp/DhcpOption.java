@@ -1,7 +1,6 @@
 package com.lu3in033.projet.layers.dhcp;
 
 import java.nio.ByteBuffer;
-import java.util.Optional;
 import java.util.StringJoiner;
 
 /**
@@ -21,15 +20,9 @@ public class DhcpOption {
         this.type = type;
         this.length = length;
         this.data = data;
-        Optional<DhcpOptions> optType;
-        if ((optType = DhcpOptions.get(type)).isPresent()) {
-            DhcpOptions opt = optType.get();
-            name = opt.prettyName;
-            formatter = opt.formatter;
-        } else {
-            name = "Unknown";
-            formatter = DhcpOptionFormatter.RAW_HEX;
-        }
+        DhcpOptions opt = DhcpOptions.get(type).orElse(DhcpOptions.Fallback);
+        name = opt.prettyName;
+        formatter = opt.formatter;
     }
 
     @Override

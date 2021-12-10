@@ -11,11 +11,17 @@ import java.util.function.Function;
 interface DhcpOptionFormatter extends Function<ByteBuffer, String> {
     // We use trim() to delete all null characters
     DhcpOptionFormatter ASCII = byteBuffer -> StandardCharsets.US_ASCII.decode(byteBuffer).toString().trim();
-    DhcpOptionFormatter EMPTY = byteBuffer -> "";
+    DhcpOptionFormatter EMPTY = byteBuffer -> "None";
     DhcpOptionFormatter UNSIGNED_INTEGER = byteBuffer -> Integer.toUnsignedString(byteBuffer.getInt());
     DhcpOptionFormatter UNSIGNED_SHORT = byteBuffer -> Integer.toUnsignedString(byteBuffer.getShort());
+    DhcpOptionFormatter UNSIGNED_BYTE = byteBuffer -> Integer.toUnsignedString(Byte.toUnsignedInt(byteBuffer.get()));
     DhcpOptionFormatter INTEGER = byteBuffer -> Integer.toString(byteBuffer.getInt());
-    DhcpOptionFormatter RAW_HEX = byteBuffer -> Integer.toUnsignedString(byteBuffer.getInt());
+    DhcpOptionFormatter RAW_HEX = byteBuffer -> {
+        StringJoiner s = new StringJoiner(", ", "[", "]");
+        while (byteBuffer.hasRemaining())
+            s.add(String.format("0x%02x", byteBuffer.get()));
+        return s.toString();
+    };
     DhcpOptionFormatter BOOLEAN = b -> b.get() == 1 ? "Enabled" : "Disabled";
     DhcpOptionFormatter IP = byteBuffer -> {
         try {
@@ -27,7 +33,7 @@ interface DhcpOptionFormatter extends Function<ByteBuffer, String> {
     };
     DhcpOptionFormatter IP_LIST = byteBuffer -> {
         // TODO: Change delimiter
-        StringJoiner s = new StringJoiner("\t");
+        StringJoiner s = new StringJoiner(", ");
         int ipCount = byteBuffer.remaining() / 4;
         for (int i = 0; i < ipCount; i++) {
             s.add(IP.apply(byteBuffer));
