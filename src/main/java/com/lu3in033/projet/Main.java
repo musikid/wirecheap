@@ -32,14 +32,14 @@ public class Main {
                 Ethernet eth = Ethernet.create(frame.buffer);
                 System.out.println(eth);
                 if (eth.type.value() != EtherTypes.IPv4.value()) {
-                    System.out.println("Payload: " + eth.payload());
+                    System.out.println("Payload: " + eth.payloadString());
                     continue;
                 }
 
                 Ipv4 ip = Ipv4.create(frame.buffer);
                 System.out.println(ip);
                 if (ip.nextHeaderProtocol.value != NextHeaderProtocols.UDP.value()) {
-                    System.out.println("Payload: " + ip.payload());
+                    System.out.println("Payload: " + ip.payloadString());
                     continue;
                 }
 
@@ -49,7 +49,7 @@ public class Main {
                     Dhcp dhcp = Dhcp.create(frame.buffer);
                     System.out.println(dhcp);
                 } else {
-                    System.out.println("Payload: " + udp.payload());
+                    System.out.println("Payload: " + udp.payloadString());
                 }
             }
         } catch (ParseException e) {
