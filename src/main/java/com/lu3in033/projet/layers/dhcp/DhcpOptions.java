@@ -33,13 +33,13 @@ public enum DhcpOptions {
     ExtensionsPath(18, "Extensions Path", DhcpOptionFormatter.ASCII),
     IPForwarding(19, "IP Forwarding", DhcpOptionFormatter.BOOLEAN),
     NonLocal(20, "Non-Local Source Routing", DhcpOptionFormatter.BOOLEAN),
-    PolicyFilter(21, "Policy Filter", DhcpOptionFormatter.IP),
+    PolicyFilter(21, "Policy Filter", DhcpOptionFormatter.IP_LIST),
     MaxDatagramRSize(22, "Max Datagram Reassembly Size", DhcpOptionFormatter.UNSIGNED_SHORT),
     DefaultTTL(23, "Default IP Time-to-live", DhcpOptionFormatter.UNSIGNED_BYTE),
     PathMTUTimeout(24, "Path MTU Aging Timeout", DhcpOptionFormatter.UNSIGNED_INTEGER),
     PathMTUTable(25, "Path MTU Plateau Table", buffer -> {
         // TODO: Change delimiter
-        StringJoiner s = new StringJoiner(",");
+        StringJoiner s = new StringJoiner(", ");
         int nbCount = buffer.remaining() / 2;
         for (int i = 0; i < nbCount; i++) {
             s.add(DhcpOptionFormatter.UNSIGNED_SHORT.apply(buffer));
@@ -54,7 +54,7 @@ public enum DhcpOptions {
     RouterDiscovery(31, "Perform Router Discovery", DhcpOptionFormatter.BOOLEAN),
     RouterSolAddress(32, "Router Solicitation Address", DhcpOptionFormatter.IP),
     StaticRoute(33, "Static Route", buffer -> {
-        StringJoiner s = new StringJoiner(";");
+        StringJoiner s = new StringJoiner("; ");
         int count = buffer.remaining() / 8;
         for (int i = 0; i < count; i++) {
             String ip1 = DhcpOptionFormatter.IP.apply(buffer);
@@ -75,7 +75,7 @@ public enum DhcpOptions {
     Vendor(43, "Vendor Specific Information", DhcpOptionFormatter.RAW_HEX),
     NetBiosNameServer(44, "NetBIOS over TCP/IP Name Server", DhcpOptionFormatter.IP_LIST),
     NetBiosDataDisServer(45, "NetBIOS over TCP/IP Datagram Distribution Server", DhcpOptionFormatter.IP_LIST),
-    NetBiosType(46, "", buffer -> {
+    NetBiosType(46, "NetBIOS over TCP/IP Node Type", buffer -> {
         //TODO: Should we create a dedicated enum?
         return switch (buffer.get()) {
             case 0x1 -> "B-node";
@@ -154,6 +154,25 @@ public enum DhcpOptions {
     DefaultIRCServer(74, "Default Internet Relay Chat (IRC) Server", DhcpOptionFormatter.IP_LIST),
     StreetTalkServer(75, "StreetTalk Server", DhcpOptionFormatter.IP_LIST),
     STDAServer(76, "StreetTalk Directory Assistance (STDA) Server", DhcpOptionFormatter.IP_LIST),
+    PCode(100, "TZ POSIX", DhcpOptionFormatter.ASCII),
+    TCode(101, "TZ Database", DhcpOptionFormatter.ASCII),
+    ClasslessRoute(121, "Classless Route", buffer -> {
+        StringJoiner s = new StringJoiner(", ");
+        while (buffer.hasRemaining()) {
+            int width = (int) Math.ceil(buffer.get() / 8.0);
+            byte[] mask = new byte[width];
+            buffer.get(mask);
+            int cidr = 0;
+            for (byte bits : mask) {
+                cidr += Integer.bitCount(bits);
+            }
+            // We just display the CIDR number
+            // String maskString = new Ipv4Address(mask).toString();
+            String addr = DhcpOptionFormatter.IP.apply(buffer);
+            s.add(String.format("%s/%d", addr, cidr));
+        }
+        return s.toString();
+    }),
     EndOfOptions(255, "End Of Options", DhcpOptionFormatter.EMPTY);
 
     public final static Map<Integer, DhcpOptions> VALUES = Arrays.stream(DhcpOptions.values())
