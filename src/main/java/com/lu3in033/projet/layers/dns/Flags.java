@@ -132,15 +132,15 @@ public class Flags {
 			default -> " Unknown";
 		};
 	}
-	
-	public String delimiter = " \n -> ";
+
+	public String delimiter = " \n\t\t-> ";
 	public String prefix 	= Flags.class.getSimpleName() + " :\n";
 	public String sufix	 = "";
 	
 	
 	public String toString() {
 		return new StringJoiner(delimiter, prefix , sufix)
-				.add(" -> Response : " + this.reponse(qr))
+				.add(" \t\t-> Response : " + this.reponse(qr))
 				.add("Opcode : " + this.opcode(opcode))
 				.add("Authoritative Answer : " +this.authoritativeAnswer(aa))
 				.add("Truncated	: " + this.truncated(tc))

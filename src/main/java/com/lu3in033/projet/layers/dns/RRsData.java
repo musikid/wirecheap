@@ -48,11 +48,14 @@ public class RRsData {
 	public int retry 	;
 	public int expire 	;
 
+	//ANY
 	public static short typeAny = 0x00ff;
 
+	//AAA
+	public static short typeAAA = 0x001C;
+	public String aaaaAdress;
 
-	public static short typeAAA = 0x0;
-
+	//CNAME
 	public static short typeCNAME =0x0005;
 	public String cName ;
 
@@ -66,7 +69,7 @@ public class RRsData {
 	//constructeur 
 	public RRsData (String domain, short type, short classe,int ttl, short rdlenght, Ipv4Address ip, short preference,
 			String exchange, String nsdName, String ptrName, String mName, String rName, 
-			int serial, int refresh, int retry, int expire,String cName, boolean questionSection) {
+			int serial, int refresh, int retry, int expire,String aaaaAdress, String cName, boolean questionSection) {
 		
 		this.domain 	= domain;
 		this.type 		= type;
@@ -84,6 +87,7 @@ public class RRsData {
 		this.refresh 	= refresh;
 		this.retry 		= retry;
 		this.expire 	= expire;
+		this.aaaaAdress	= aaaaAdress;
 		this.cName 		= cName;
 		this.questionSection = questionSection;
 	}
@@ -100,15 +104,15 @@ public class RRsData {
 
 
 		if(type != typeA && type != typeMX  && type != typeNS && type != typePTR && type != typeSOA && type != typeAny
-				&& type != typeCNAME) {
+				&& type != typeCNAME && type != typeAAA) {
 			Dns.stopParsing = true;
 			return new RRsData(domain, type, (short) -1, -1, (short) -1, null, (short) -1, vide, vide, vide,
-					vide, vide, -1, -1, -1, -1,vide,  questionSection);
+					vide, vide, -1, -1, -1, -1,vide ,vide,  questionSection);
 		}
 
 		if (questionSection){
 			return new RRsData(domain, type, classe,-1, (short)-1, null, (short) -1, vide, vide, vide,
-					vide, vide, -1, -1, -1, -1,vide, questionSection);
+					vide, vide, -1, -1, -1, -1,vide,vide, questionSection);
 
 		} else {
 			int ttl = bytes.getInt();
@@ -124,23 +128,23 @@ public class RRsData {
 					e.printStackTrace();
 				}
 				return new RRsData(domain, type, classe,ttl,rdlenght, ipv4, (short) -1, vide, vide, vide,
-						vide, vide, -1, -1, -1, -1,vide,questionSection);
+						vide, vide, -1, -1, -1, -1,vide, vide,questionSection);
 
 			} else if (type == typeMX) {
 				short preference = bytes.getShort();
 				String exchange = readDomain(bytes,rdlenght);
 				return new RRsData(domain, type, classe,ttl,rdlenght, null, preference, exchange, vide, vide, vide,
-						vide, -1, -1, -1, -1,vide, questionSection);
+						vide, -1, -1, -1, -1,vide,vide, questionSection);
 
 			} else if (type == typeNS) {
 				String nsdName = readDomain(bytes,rdlenght);
 				return new RRsData(domain, type, classe,ttl,rdlenght, null, (short) -1, vide, nsdName, vide,
-						vide, vide, -1, -1, -1, -1,vide, questionSection);
+						vide, vide, -1, -1, -1, -1,vide,vide, questionSection);
 
 			} else if (type == typePTR) {
 				String ptrName = readDomain(bytes,rdlenght);
 				return new RRsData(domain, type, classe,ttl,rdlenght, null, (short) -1, vide, vide, ptrName,
-						vide, vide, -1, -1, -1, -1,vide, questionSection);
+						vide, vide, -1, -1, -1, -1,vide,vide, questionSection);
 
 			} else if (type == typeSOA) {
 				String mName = readDomain(bytes,rdlenght);
@@ -150,21 +154,36 @@ public class RRsData {
 				int retry = bytes.getInt();
 				int expire = bytes.getInt();
 				return new RRsData(domain, type, classe,ttl,rdlenght, null, (short) -1, vide, vide, vide,
-						mName, rName, serial, refresh, retry, expire,vide,questionSection);
+						mName, rName, serial, refresh, retry, expire,vide,vide, questionSection);
 
 			}
 			else if (type == typeCNAME){
 				String cName = readDomain(bytes,rdlenght);
 				return new RRsData(domain, type, classe,ttl,rdlenght, null, (short) -1, vide, vide, vide,
-						vide, vide, -1, -1, -1, -1,cName, questionSection);
+						vide, vide, -1, -1, -1, -1,vide,cName, questionSection);
 			}
-
+			else if (type == typeAAA){
+				String aaaaAdress = readAAAAAdress(bytes);
+				return new RRsData(domain, type, classe,ttl,rdlenght, null, (short) -1, vide, vide, vide,
+						vide, vide, -1, -1, -1, -1,aaaaAdress, vide, questionSection);
+			}
 			else {
 				return new RRsData(domain, type, classe,ttl, rdlenght, null, (short) -1, vide, vide, vide,
-						vide, vide, -1, -1, -1, -1,vide, questionSection);
+						vide, vide, -1, -1, -1, -1,vide,vide, questionSection);
 			}
 		}
 	}
+	public static String readAAAAAdress(ByteBuffer bytes){
+		List<String> listAddress = new ArrayList<String>();
+		for (int i=0; i<(16/2); i++){
+			short partAdress = bytes.getShort();
+			listAddress.add(String.valueOf(partAdress));
+		}
+		String adress = assembleDomain(listAddress);
+		return adress;
+
+	}
+
 
 	public static String readDomain(ByteBuffer bytes, int length){
 		int statingPositionReading = bytes.position();
@@ -197,7 +216,6 @@ public class RRsData {
 			//determiner la longueur maximal  = la position du byte buffer + rdlenght -1;
 			//a chaque incrémentation du buffeur déterminer si on depace cette position maximal
 				while (partDomainLenght != 0x00 && bytes.position() <= endMaxReadingDomain) {
-					System.out.println(partDomainLenght);
 					byte[] hexToConvert = new byte[partDomainLenght];
 					int j = 0;
 					for (i = nextByteToBeTreated; i <= endPartDomain; i++) {
@@ -214,14 +232,11 @@ public class RRsData {
 					byte test2 = (byte) (partDomainLenght >> 6 & 0b11);
 					if (test2 == (byte)3) {
 						short offset = (short) ((partDomainLenght - 0xc0) << 8 | bytes.get() & 0xFF);
-						System.out.println("o"+offset);
+
 						//short offset = (short) (ptr_or_label << 8 | bytes.get() & 0xFF);
 						//offset = (short) (offset & 0x3FFFF);
 
 						int recoveryPosition = bytes.position();
-						System.out.println(recoveryPosition);
-
-						System.out.println("s"+startingPosition);
 						bytes.position(startingPosition + offset);
 						domain = readDomain(bytes, length);
 
@@ -255,15 +270,15 @@ public class RRsData {
 
 	
 	public String toString() {
-		String delimiter = " \n -> ";
-		String prefix 	 = "   "+RRsData.class.getSimpleName() + " Type(" + type + ") Class(" + classe+ ") :\n";
+		String delimiter = " \n\t\t -> ";
+		String prefix 	 = "\t"+RRsData.class.getSimpleName() + " Type(" + type + ") Class(" + classe+ ") :\n";
 		String sufix	 = "\n";
 
 		if (type == typeA || type == typeMX  || type == typeNS || type == typePTR ||
-				type == typeSOA || type == typeAny || type == typeCNAME){
+				type == typeSOA || type == typeAny || type == typeCNAME || type == typeAAA){
 			if (questionSection == true) {
 				return new StringJoiner(delimiter, prefix, sufix)
-						.add(" -> Domain : " + domain)
+						.add(" \t\t -> Domain : " + domain)
 						.add("Type   : " + type)
 						.add("Class  : " + classe)
 						.toString();
@@ -271,8 +286,8 @@ public class RRsData {
 
 			else if (type == typeA) {
 				return new StringJoiner(delimiter, prefix, sufix)
-						.add(" -> Domain : " + domain)
-						.add("Type   : " + type)
+						.add(" \t\t -> Domain : " + domain)
+						.add("Type A  : " + type)
 						.add("Class  : " + classe)
 						.add("TTL	 : " + ttl)
 						.add("Rdlength : " + rdlenght)
@@ -280,8 +295,8 @@ public class RRsData {
 						.toString();
 			} else if (type == typeMX) {
 				return new StringJoiner(delimiter, prefix, sufix)
-						.add(" -> Domain : " + domain)
-						.add("Type   : " + type)
+						.add(" \t\t -> Domain : " + domain)
+						.add("Type Mx  : " + type)
 						.add("Class  : " + classe)
 						.add("TTL	 : " + ttl)
 						.add("Rdlength : " + rdlenght)
@@ -290,8 +305,8 @@ public class RRsData {
 						.toString();
 			} else if (type == typeNS) {
 				return new StringJoiner(delimiter, prefix, sufix)
-						.add(" -> Domain : " + domain)
-						.add("Type   : " + type)
+						.add(" \t\t -> Domain : " + domain)
+						.add("Type  NS : " + type)
 						.add("Class  : " + classe)
 						.add("TTL	 : " + ttl)
 						.add("Rdlength : " + rdlenght)
@@ -299,8 +314,8 @@ public class RRsData {
 						.toString();
 			} else if (type == typePTR) {
 				return new StringJoiner(delimiter, prefix, sufix)
-						.add(" -> Domain : " + domain)
-						.add("Type   : " + type)
+						.add(" \t\t -> Domain : " + domain)
+						.add("Type  PTR : " + type)
 						.add("Class  : " + classe)
 						.add("TTL	 : " + ttl)
 						.add("Rdlength : " + rdlenght)
@@ -308,8 +323,8 @@ public class RRsData {
 						.toString();
 			} else if (type == typeSOA) {
 				return new StringJoiner(delimiter, prefix, sufix)
-						.add(" -> Domain : " + domain)
-						.add("Type   : " + type)
+						.add(" \t\t -> Domain : " + domain)
+						.add("Type SOA  : " + type)
 						.add("Class  : " + classe)
 						.add("TTL	 : " + ttl)
 						.add("Rdlength : " + rdlenght)
@@ -322,23 +337,34 @@ public class RRsData {
 						.toString();
 			} else if (type == typeAny) {
 				return new StringJoiner(delimiter, prefix, sufix)
-						.add(" -> Domain : " + domain)
-						.add("Type   : " + type)
+						.add(" \t\t -> Domain : " + domain)
+						.add("Type ANY : " + type)
 						.add("Class  : " + classe)
 						.toString();
 			}else if (type == typeCNAME){
 				return new StringJoiner(delimiter, prefix, sufix)
-						.add(" -> Domain : " + domain)
-						.add("Type   : " + type)
+						.add(" \t\t -> Domain : " + domain)
+						.add("Type CNAME  : " + type)
 						.add("Class  : " + classe)
 						.add("TTL	 : " + ttl)
 						.add("Rdlength : " + rdlenght)
 						.add("CNAM   : " + cName)
 						.toString();
+
+			}else if (type == typeAAA){
+				return new StringJoiner(delimiter, prefix, sufix)
+						.add(" \t\t -> Domain : " + domain)
+						.add("Type  AAAA : " + type)
+						.add("Class  : " + classe)
+						.add("TTL	 : " + ttl)
+						.add("Rdlength : " + rdlenght)
+						.add("AAAA Adress   : " + aaaaAdress)
+						.toString();
 			}
+
 		}
 			return new StringJoiner(delimiter, prefix, sufix)
-					.add(" -> Domain : " + domain)
+					.add(" \t\t -> Domain : " + domain)
 					.add("Type   : " + type)
 					.add("Class  : " + classe)
 					.add("TTL	 : " + ttl)

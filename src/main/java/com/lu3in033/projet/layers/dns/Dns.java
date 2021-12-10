@@ -120,12 +120,12 @@ public class Dns {
 		 return assembler;
 	 }
 	 // String
-	 String delimiter = " \n -> ";
+	 String delimiter = " \n\t -> ";
 	 String prefix 	 = Dns.class.getSimpleName() + " :\n";
 	 String sufix	 = "\n";
 	 public String toString() {
 		 return new StringJoiner(delimiter, prefix, sufix)
-				 .add(" -> Identifier : " + identifier)
+				 .add(" \t -> Identifier : " + identifier)
 				 .add( flags.toString().replaceAll("\n", "\n    "))
 				 .add("Question : " + questions)
 				 .add("AnswerRRs: " + answerRRs)
