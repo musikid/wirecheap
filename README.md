@@ -18,7 +18,7 @@ mvn package
 ## Execute
 
 ```shell
-java -jar target/Wirecheap*.jar
+java -jar target/Wirecheap*.jar FILE
 ```
 
 ## Project structure
@@ -29,7 +29,8 @@ This is where the root of the project is located. The `Main` class is defined he
 
 ### src/main/java/com/lu3in033/projet/layers
 
-Definitions of the layers used in this project (Ethernet, IP, UDP, DNS, DHCP).
+Definitions of the layers used in this project (Ethernet, IP, UDP, DNS, DHCP). Each layer consume data from
+a `ByteBuffer` and returns an instance of the class (by using `.create()`).
 
 ### src/main/java/com/lu3in033/projet/parser
 
