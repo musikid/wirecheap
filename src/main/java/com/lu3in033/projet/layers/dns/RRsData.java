@@ -50,6 +50,13 @@ public class RRsData {
 
 	public static short typeAny = 0x00ff;
 
+
+	public static short typeAAA = 0x0;
+
+	public static short typeCNAME =0x0005;
+	public String cName ;
+
+
 	//listType
 	public static short[] listTab = new short[]{typeA, typeMX, typeNS, typeNS, typeSOA,typeAny};
 
@@ -59,7 +66,7 @@ public class RRsData {
 	//constructeur 
 	public RRsData (String domain, short type, short classe,int ttl, short rdlenght, Ipv4Address ip, short preference,
 			String exchange, String nsdName, String ptrName, String mName, String rName, 
-			int serial, int refresh, int retry, int expire, boolean questionSection) {
+			int serial, int refresh, int retry, int expire,String cName, boolean questionSection) {
 		
 		this.domain 	= domain;
 		this.type 		= type;
@@ -77,6 +84,7 @@ public class RRsData {
 		this.refresh 	= refresh;
 		this.retry 		= retry;
 		this.expire 	= expire;
+		this.cName 		= cName;
 		this.questionSection = questionSection;
 	}
 
@@ -85,27 +93,26 @@ public class RRsData {
 		//to recover the common values
 
 
-		String domain 	= readDomain(bytes);
+		String domain 	= readDomain(bytes,255);
 		short type 	  	= bytes.getShort();
 		short classe 	= bytes.getShort();
 		String vide = "";
 
 
-		if(type != typeA && type != typeMX  && type != typeNS && type != typePTR && type != typeSOA && type != typeAny) {
+		if(type != typeA && type != typeMX  && type != typeNS && type != typePTR && type != typeSOA && type != typeAny
+				&& type != typeCNAME) {
 			Dns.stopParsing = true;
 			return new RRsData(domain, type, (short) -1, -1, (short) -1, null, (short) -1, vide, vide, vide,
-					vide, vide, -1, -1, -1, -1, questionSection);
+					vide, vide, -1, -1, -1, -1,vide,  questionSection);
 		}
-
-
 
 		if (questionSection){
 			return new RRsData(domain, type, classe,-1, (short)-1, null, (short) -1, vide, vide, vide,
-					vide, vide, -1, -1, -1, -1, questionSection);
+					vide, vide, -1, -1, -1, -1,vide, questionSection);
 
 		} else {
 			int ttl = bytes.getInt();
-			short rdlenght =   bytes.getShort();
+			short rdlenght = bytes.getShort();
 
 			if (type == typeA) {
 				ByteBuffer rawIP = ByteBuffer.allocate(4);
@@ -117,42 +124,54 @@ public class RRsData {
 					e.printStackTrace();
 				}
 				return new RRsData(domain, type, classe,ttl,rdlenght, ipv4, (short) -1, vide, vide, vide,
-						vide, vide, -1, -1, -1, -1,questionSection);
+						vide, vide, -1, -1, -1, -1,vide,questionSection);
 
 			} else if (type == typeMX) {
 				short preference = bytes.getShort();
-				String exchange = readDomain(bytes);
+				String exchange = readDomain(bytes,rdlenght);
 				return new RRsData(domain, type, classe,ttl,rdlenght, null, preference, exchange, vide, vide, vide,
-						vide, -1, -1, -1, -1,questionSection);
+						vide, -1, -1, -1, -1,vide, questionSection);
 
 			} else if (type == typeNS) {
-				String nsdName = readDomain(bytes);
+				String nsdName = readDomain(bytes,rdlenght);
 				return new RRsData(domain, type, classe,ttl,rdlenght, null, (short) -1, vide, nsdName, vide,
-						vide, vide, -1, -1, -1, -1,questionSection);
+						vide, vide, -1, -1, -1, -1,vide, questionSection);
 
 			} else if (type == typePTR) {
-				String ptrName = readDomain(bytes);
+				String ptrName = readDomain(bytes,rdlenght);
 				return new RRsData(domain, type, classe,ttl,rdlenght, null, (short) -1, vide, vide, ptrName,
-						vide, vide, -1, -1, -1, -1,questionSection);
+						vide, vide, -1, -1, -1, -1,vide, questionSection);
 
 			} else if (type == typeSOA) {
-				String mName = readDomain(bytes);
-				String rName = readDomain(bytes);
+				String mName = readDomain(bytes,rdlenght);
+				String rName = readDomain(bytes,rdlenght);
 				int serial = bytes.getInt();
 				int refresh = bytes.getInt();
 				int retry = bytes.getInt();
 				int expire = bytes.getInt();
 				return new RRsData(domain, type, classe,ttl,rdlenght, null, (short) -1, vide, vide, vide,
-						mName, rName, serial, refresh, retry, expire,questionSection);
+						mName, rName, serial, refresh, retry, expire,vide,questionSection);
 
-			} else {
+			}
+			else if (type == typeCNAME){
+				String cName = readDomain(bytes,rdlenght);
+				return new RRsData(domain, type, classe,ttl,rdlenght, null, (short) -1, vide, vide, vide,
+						vide, vide, -1, -1, -1, -1,cName, questionSection);
+			}
+
+			else {
 				return new RRsData(domain, type, classe,ttl, rdlenght, null, (short) -1, vide, vide, vide,
-						vide, vide, -1, -1, -1, -1,questionSection);
+						vide, vide, -1, -1, -1, -1,vide, questionSection);
 			}
 		}
 	}
 
-	public static String readDomain(ByteBuffer bytes){
+	public static String readDomain(ByteBuffer bytes, int length){
+		int statingPositionReading = bytes.position();
+		int endMaxReadingDomain = statingPositionReading + length - 1;
+
+		String domain = "";
+
 		byte ptr_or_label = bytes.get();
 		byte test = (byte) (ptr_or_label >> 6 & 0b11);
 		if (test == (byte)3){
@@ -162,10 +181,10 @@ public class RRsData {
 			int recoveryPosition = bytes.position();
 
 			bytes.position(startingPosition+ offset);
-			String domain = readDomain(bytes);
+			String domain2 = readDomain(bytes,length);
 
 			bytes.position(recoveryPosition);
-			return domain;
+			return domain2;
 
 		}else{
 			List<String> list2Domain = new ArrayList<String>();
@@ -174,26 +193,47 @@ public class RRsData {
 			byte nextByteToBeTreated = (byte) (i + 1);
 			byte endPartDomain = (byte) (partDomainLenght + nextByteToBeTreated - 1);
 
+			//recupere la position du pointeur de byte buffer à l'entrée -> dans la fonction readDomain
+			//determiner la longueur maximal  = la position du byte buffer + rdlenght -1;
+			//a chaque incrémentation du buffeur déterminer si on depace cette position maximal
+				while (partDomainLenght != 0x00 && bytes.position() <= endMaxReadingDomain) {
+					System.out.println(partDomainLenght);
+					byte[] hexToConvert = new byte[partDomainLenght];
+					int j = 0;
+					for (i = nextByteToBeTreated; i <= endPartDomain; i++) {
+						hexToConvert[j] = bytes.get();
+						j++;
+					}
 
-			while (partDomainLenght != 0x00) {
+					String s = new String(hexToConvert, StandardCharsets.UTF_8);
+					list2Domain.add(s);
 
-				byte[] hexToConvert = new byte[partDomainLenght];
-				int j = 0;
-				for (i = nextByteToBeTreated; i <= endPartDomain; i++) {
-					hexToConvert[j] = bytes.get();
-					j++;
+					nextByteToBeTreated = (byte) (endPartDomain + 1);
+					//definr si le procahin octet indique un offset
+					partDomainLenght = bytes.get();
+					byte test2 = (byte) (partDomainLenght >> 6 & 0b11);
+					if (test2 == (byte)3) {
+						short offset = (short) ((partDomainLenght - 0xc0) << 8 | bytes.get() & 0xFF);
+						System.out.println("o"+offset);
+						//short offset = (short) (ptr_or_label << 8 | bytes.get() & 0xFF);
+						//offset = (short) (offset & 0x3FFFF);
+
+						int recoveryPosition = bytes.position();
+						System.out.println(recoveryPosition);
+
+						System.out.println("s"+startingPosition);
+						bytes.position(startingPosition + offset);
+						domain = readDomain(bytes, length);
+
+						bytes.position(recoveryPosition);
+						//return domain;
+						break;
+					}
+					endPartDomain = (byte) (nextByteToBeTreated + partDomainLenght);
+					nextByteToBeTreated++;
+
 				}
-
-				String s = new String(hexToConvert, StandardCharsets.UTF_8);
-				list2Domain.add(s);
-
-				nextByteToBeTreated = (byte) (endPartDomain + 1);
-				partDomainLenght = bytes.get();
-				endPartDomain = (byte) (nextByteToBeTreated + partDomainLenght);
-
-				nextByteToBeTreated++;
-
-			}
+			list2Domain.add(domain);
 			return assembleDomain(list2Domain);
 		}
 	}
@@ -220,7 +260,7 @@ public class RRsData {
 		String sufix	 = "\n";
 
 		if (type == typeA || type == typeMX  || type == typeNS || type == typePTR ||
-				type == typeSOA || type == typeAny){
+				type == typeSOA || type == typeAny || type == typeCNAME){
 			if (questionSection == true) {
 				return new StringJoiner(delimiter, prefix, sufix)
 						.add(" -> Domain : " + domain)
@@ -285,6 +325,15 @@ public class RRsData {
 						.add(" -> Domain : " + domain)
 						.add("Type   : " + type)
 						.add("Class  : " + classe)
+						.toString();
+			}else if (type == typeCNAME){
+				return new StringJoiner(delimiter, prefix, sufix)
+						.add(" -> Domain : " + domain)
+						.add("Type   : " + type)
+						.add("Class  : " + classe)
+						.add("TTL	 : " + ttl)
+						.add("Rdlength : " + rdlenght)
+						.add("CNAM   : " + cName)
 						.toString();
 			}
 		}
