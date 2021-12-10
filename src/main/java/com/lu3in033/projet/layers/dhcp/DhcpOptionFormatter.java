@@ -19,7 +19,7 @@ interface DhcpOptionFormatter extends Function<ByteBuffer, String> {
     DhcpOptionFormatter RAW_HEX = byteBuffer -> {
         StringJoiner s = new StringJoiner(", ", "[", "]");
         while (byteBuffer.hasRemaining())
-            s.add(String.format("%02x", byteBuffer.get()));
+            s.add(String.format("0x%02x", byteBuffer.get()));
         return s.toString();
     };
     DhcpOptionFormatter BOOLEAN = b -> b.get() == 1 ? "Enabled" : "Disabled";
@@ -33,7 +33,7 @@ interface DhcpOptionFormatter extends Function<ByteBuffer, String> {
     };
     DhcpOptionFormatter IP_LIST = byteBuffer -> {
         // TODO: Change delimiter
-        StringJoiner s = new StringJoiner(",");
+        StringJoiner s = new StringJoiner(", ");
         int ipCount = byteBuffer.remaining() / 4;
         for (int i = 0; i < ipCount; i++) {
             s.add(IP.apply(byteBuffer));

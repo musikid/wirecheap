@@ -141,7 +141,7 @@ public class Dhcp {
                 int totalLength = oldLength + length;
                 ByteBuffer newData = ByteBuffer.allocate(totalLength);
                 newData.put(oldOption.data.array());
-                bytes.get(newData.array(), oldLength, length);
+                bytes.get(newData.array(), oldLength - 1, length);
                 return new DhcpOption(key, totalLength, newData);
             });
         }
@@ -180,9 +180,9 @@ public class Dhcp {
                 .add("Next IP address: " + siaddr)
                 .add("Relay agent IP address: " + giaddr)
                 .add("Client Hardware address: " + chaddrString)
-                .add("Server host name: " + sname)
-                .add("Boot file name: " + file)
-                .add("Options: " + optionsStr)
+                .add("Server host name: " + (sname.isEmpty() ? "not given" : sname))
+                .add("Boot file name: " + (file.isEmpty() ? "not given" : sname))
+                .add("Options: " + options.size() + "\n   -> " + optionsStr)
                 .toString();
     }
 }
